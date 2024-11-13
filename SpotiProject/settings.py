@@ -1,10 +1,8 @@
 from pathlib import Path
 import os
-from dotenv import load_dotenv
 from django.utils.translation import gettext_lazy as _
 
-# Load environment variables from .env file
-load_dotenv()
+
 
 # Base directory of the project
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -46,7 +44,7 @@ MIDDLEWARE = [
 ]
 
 # Root URL configuration
-ROOT_URLCONF = 'SpotifyWrapped.urls'
+ROOT_URLCONF = 'SpotiProject.urls'
 
 
 # Templates configuration
@@ -68,7 +66,7 @@ TEMPLATES = [
 
 
 # WSGI application
-WSGI_APPLICATION = 'SpotifyWrapped.wsgi.application'
+WSGI_APPLICATION = 'SpotiProject.wsgi.application'
 
 # Database configuration
 DATABASES = {
