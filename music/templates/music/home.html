@@ -1,10 +1,75 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+<div class="navigation">
+    <a href="{% url 'settings' %}" class="button">Settings</a>
+    <a href="{% url 'logout' %}" class="button">Log Out</a>
+</div>
 
-</body>
-</html>
+<h2>Your Top Artists</h2>
+{% if top_artists %}
+    <ul>
+        {% for artist in top_artists %}
+            <li>{{ artist.name }} - Followers: {{ artist.followers.total }}</li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No top artists found.</p>
+{% endif %}
+
+<!-- Top Genres Section -->
+<h2>Your Top Genres</h2>
+{% if top_genres %}
+    <ul>
+        {% for genre in top_genres %}
+            <li>{{ genre }}</li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No top genres found.</p>
+{% endif %}
+
+<!-- Top Albums Section -->
+<h2>Your Top Albums</h2>
+{% if top_albums %}
+    <ul>
+        {% for album in top_albums %}
+            <li>{{ album.name }} by {{ album.artists.0.name }}</li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No top albums found.</p>
+{% endif %}
+
+<!-- Top Tracks Section -->
+<h2>Your Top Tracks</h2>
+{% if top_tracks %}
+    <ul>
+        {% for track in top_tracks %}
+            <li>{{ track.name }} by {{ track.artists.0.name }} (Album: {{ track.album.name }})</li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No top tracks found.</p>
+{% endif %}
+
+<!-- Recently Played Tracks Section -->
+<h2>Your Recently Played Tracks</h2>
+{% if recent_tracks %}
+    <ul>
+        {% for item in recent_tracks %}
+            <li>{{ item.track.name }} by {{ item.track.artists.0.name }} (Played at: {{ item.played_at }})</li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No recently played tracks found.</p>
+{% endif %}
+
+<!-- Playlists Section -->
+<h2>Your Playlists</h2>
+{% if playlists %}
+    <ul>
+        {% for playlist in playlists %}
+            <li>{{ playlist.name }} - {{ playlist.tracks.total }} tracks</li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No playlists found.</p>
+{% endif %}

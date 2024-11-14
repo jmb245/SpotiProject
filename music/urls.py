@@ -1,10 +1,14 @@
+# music/urls.py
+
 from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('spotify/login/', views.spotify_login, name='spotify_login'),
-    path('music/callback/', views.spotify_callback, name='spotify_callback'),
+    path('', views.home, name='home'),
+    path('link-spotify/', views.link_spotify, name='link_spotify'),
+    path('spotify/callback/', views.spotify_callback, name='spotify_callback'),
+    path('signup/', views.signup_view, name='signup'),
+    path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
-    path('', views.home_view, name='home'),  # Home page
-    path('login/', views.login_page, name='login_page'),  # Login page URL
+    path('settings/', views.settings_view, name='settings'),
 ]

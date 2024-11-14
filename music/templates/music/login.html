@@ -1,15 +1,8 @@
-<!-- templates/music/login.html -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Login to Spotify Wrapped</title>
-</head>
-<body>
-    <h1>Welcome to Spotify Wrapped</h1>
-    <p>Please log in to view your Spotify stats.</p>
-    <a href="{% url 'spotify_login' %}">
-        <button>Log In with Spotify</button>
-    </a>
-</body>
-</html>
+<!-- music/templates/music/login.html -->
+<h1>Log In</h1>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Log In</button>
+</form>
+<p>Don’t have an account? <a href="{% url 'signup' %}">Sign up here</a></p>

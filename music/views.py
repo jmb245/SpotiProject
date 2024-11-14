@@ -1,131 +1,181 @@
-from django.shortcuts import redirect, render
-from django.http import JsonResponse
-from collections import Counter
-import requests
-import logging
-import os
-from django.http import HttpRequest
+# views.py
 
-# Set up logging
+import logging
+import requests
+from django.shortcuts import render, redirect
+from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib import messages
+from allauth.socialaccount.models import SocialToken, SocialAccount
+from django.urls import reverse
+from .forms import CustomUserCreationForm, CustomAuthenticationForm
+from django.conf import settings
+
 logger = logging.getLogger(__name__)
 
-# Load environment variables
-SPOTIFY_CLIENT_ID = os.getenv('SPOTIFY_CLIENT_ID')
-SPOTIFY_CLIENT_SECRET = os.getenv('SPOTIFY_CLIENT_SECRET')
-SPOTIFY_REDIRECT_URI = os.getenv('SPOTIFY_REDIRECT_URI')
+# User Authentication Views
 
-# Check for missing environment variables
-if not SPOTIFY_CLIENT_ID or not SPOTIFY_CLIENT_SECRET or not SPOTIFY_REDIRECT_URI:
-    logger.error("Spotify credentials are missing. Check your environment variables.")
-
-
-def spotify_login(request):
-    scopes = "user-read-recently-played user-top-read user-library-read"
-    spotify_auth_url = (
-        "https://accounts.spotify.com/authorize"
-        f"?response_type=code&client_id={SPOTIFY_CLIENT_ID}"
-        f"&scope={scopes}&redirect_uri={SPOTIFY_REDIRECT_URI}"
-        f"&show_dialog=true"
-    )
-
-    # Log the full Spotify authorization URL to check scopes
-    logger.info(f"Spotify authorization URL: {spotify_auth_url}")
-
-    return redirect(spotify_auth_url)
-
-
-def spotify_callback(request):
-    code = request.GET.get('code')
-    logger.info(f"Authorization code received: {code}")
-    token_url = 'https://accounts.spotify.com/api/token'
-
-    response = requests.post(
-        token_url,
-        data={
-            'grant_type': 'authorization_code',
-            'code': code,
-            'redirect_uri': SPOTIFY_REDIRECT_URI,
-            'client_id': SPOTIFY_CLIENT_ID,
-            'client_secret': SPOTIFY_CLIENT_SECRET
-        }
-    )
-
-    # Log the token response status and content
-    logger.info(f"Token response status: {response.status_code}")
-    logger.info(f"Token response content: {response.text}")
-
-    if response.status_code == 200:
-        tokens = response.json()
-        access_token = tokens.get('access_token')
-        logger.info(f"Access token received: {access_token}")
-        request.session['access_token'] = access_token
-        return redirect('home')
+def signup_view(request):
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            messages.success(request, 'Account created successfully.')
+            return redirect('home')
+        else:
+            messages.error(request, 'There was an error with your signup.')
     else:
-        logger.error("Spotify authentication failed.")
-        return JsonResponse({'error': 'Spotify authentication failed'}, status=response.status_code)
+        form = CustomUserCreationForm()
+    return render(request, 'music/signup.html', {'form': form})
 
-
-def home_view(request):
-    access_token = request.session.get('access_token')
-
-    if not access_token:
-        logger.info("No access token found, redirecting to login page.")
-        return redirect('login_page')
-
-    headers = {
-        'Authorization': f'Bearer {access_token}'
-    }
-
-    # Fetch top artists
-    response_artists = requests.get('https://api.spotify.com/v1/me/top/artists', headers=headers)
-    top_artists = response_artists.json().get('items', []) if response_artists.status_code == 200 else []
-    genres = [genre for artist in top_artists for genre in artist.get('genres', [])]
-    top_genres = [genre for genre, _ in Counter(genres).most_common(5)]  # Top 5 genres
-
-    # Fetch top tracks (songs)
-    response_tracks = requests.get('https://api.spotify.com/v1/me/top/tracks', headers=headers)
-    top_tracks = response_tracks.json().get('items', []) if response_tracks.status_code == 200 else []
-    top_albums = list({track['album']['name']: track['album'] for track in top_tracks}.values())[:5]  # Unique albums, top 5
-
-    # Fetch recently played tracks
-    response_recent = requests.get('https://api.spotify.com/v1/me/player/recently-played', headers=headers)
-    recent_tracks = response_recent.json().get('items', []) if response_recent.status_code == 200 else []
-
-    # Fetch user playlists
-    response_playlists = requests.get('https://api.spotify.com/v1/me/playlists', headers=headers)
-    playlists = response_playlists.json().get('items', []) if response_playlists.status_code == 200 else []
-
-    context = {
-        "wrapped_data": "Your custom Wrapped data here",
-        "share_url": request.build_absolute_uri(),
-    }
-
-    return render(request, 'music/home.html', {
-        'top_artists': top_artists,
-        'top_tracks': top_tracks,
-        'recent_tracks': recent_tracks,
-        'playlists': playlists,
-        'top_genres': top_genres,
-        'top_albums': top_albums,
-    })
+def login_view(request):
+    if request.method == 'POST':
+        form = CustomAuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            messages.success(request, 'Logged in successfully.')
+            return redirect('home')
+        else:
+            messages.error(request, 'There was an error with your login.')
+    else:
+        form = CustomAuthenticationForm()
+    return render(request, 'music/login.html', {'form': form})
 
 def logout_view(request):
-    # Log before clearing session data
-    logger.info("Logging out: Clearing session data")
+    logout(request)
+    messages.success(request, 'Logged out successfully.')
+    return redirect('login')
 
-    # Clear the session data, including the access token
-    request.session.flush()
+# Settings View
 
+@login_required
+def settings_view(request):
+    return render(request, 'music/settings.html')
 
-    # Directly print the session data after flushing
-    logger.info(f"Session data after flush: {request.session.items()}")
+# Spotify Integration Views
 
-    # Redirect to Spotify login and log redirection
-    logger.info("Redirecting to Spotify login page.")
+@login_required
+def link_spotify(request):
+    """Initiate Spotify link process"""
+    return redirect('/accounts/spotify/login/')
+
+@login_required
+def spotify_callback(request):
+    user = request.user
+    logger.info(f"User: {user} has accessed the callback")
+
+    # Retrieve the authorization code from the callback URL
+    code = request.GET.get('code')
+    if not code:
+        messages.error(request, 'Spotify authorization failed. Please try again.')
+        return redirect('settings')
+
+    # Manually request the access token from Spotify
+    token_url = 'https://accounts.spotify.com/api/token'
+    redirect_uri = settings.SPOTIFY_REDIRECT_URI
+    client_id = settings.SPOTIFY_CLIENT_ID
+    client_secret = settings.SPOTIFY_CLIENT_SECRET
+    payload = {
+        'grant_type': 'authorization_code',
+        'code': code,
+        'redirect_uri': redirect_uri,
+        'client_id': client_id,
+        'client_secret': client_secret,
+    }
+
+    # Request the token from Spotify
+    response = requests.post(token_url, data=payload)
+    if response.status_code != 200:
+        logger.error(f"Failed to get Spotify token. Status code: {response.status_code}")
+        messages.error(request, 'Spotify linking failed. Please try again.')
+        return redirect('settings')
+
+    # Parse the token data
+    token_data = response.json()
+    access_token = token_data.get('access_token')
+    refresh_token = token_data.get('refresh_token')
+
+    if not access_token:
+        logger.error("No access token returned from Spotify.")
+        messages.error(request, 'Spotify linking failed. Please try again.')
+        return redirect('settings')
+
+    # Save the token to the database manually
+    social_account, _ = SocialAccount.objects.get_or_create(user=user, provider='spotify')
+    social_token, _ = SocialToken.objects.get_or_create(account=social_account)
+    social_token.token = access_token
+    social_token.token_secret = refresh_token  # Use token_secret to store refresh token
+    social_token.save()
+
+    logger.info(f"Spotify token successfully stored for user {user.username}")
+    messages.success(request, 'Spotify successfully linked!')
     return redirect('home')
 
+# Data Fetching for Top Artists
 
-def login_page(request):
-    return render(request, 'music/login.html')
-    return render(request, 'music/login.html')
+def fetch_spotify_data(user):
+    social_account = SocialAccount.objects.filter(user=user, provider='spotify').first()
+    token = SocialToken.objects.filter(account=social_account).first() if social_account else None
+    if token:
+        headers = {"Authorization": f"Bearer {token.token}"}
+        response = requests.get("https://api.spotify.com/v1/me/top/artists", headers=headers, params={"limit": 5})
+        if response.status_code == 200:
+            return response.json().get('items', [])
+        else:
+            logger.warning(f"Failed to fetch data from Spotify. Status code: {response.status_code}")
+    else:
+        logger.warning("No Spotify token found for user.")
+    return []
+
+# Homepage Display
+def fetch_spotify_data(url, user, params=None):
+    social_account = SocialToken.objects.filter(account__user=user, account__provider='spotify').first()
+    if social_account:
+        headers = {"Authorization": f"Bearer {social_account.token}"}
+        response = requests.get(url, headers=headers, params=params)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            logger.warning(f"Failed to fetch data from Spotify. Status code: {response.status_code}")
+    else:
+        logger.warning("No Spotify token found for user.")
+    return {}
+@login_required
+def home(request):
+    # Fetch Spotify data for various sections
+    top_artists_data = fetch_spotify_data("https://api.spotify.com/v1/me/top/artists", request.user,
+                                          params={"limit": 5})
+    top_tracks_data = fetch_spotify_data("https://api.spotify.com/v1/me/top/tracks", request.user, params={"limit": 5})
+    recent_tracks_data = fetch_spotify_data("https://api.spotify.com/v1/me/player/recently-played", request.user,
+                                            params={"limit": 5})
+    playlists_data = fetch_spotify_data("https://api.spotify.com/v1/me/playlists", request.user, params={"limit": 5})
+
+    # Parse data for easy use in the template
+    top_artists = top_artists_data.get("items", [])
+    top_tracks = top_tracks_data.get("items", [])
+    recent_tracks = recent_tracks_data.get("items", [])
+    playlists = playlists_data.get("items", [])
+
+    # Extract unique genres from top artists
+    top_genres = set()
+    for artist in top_artists:
+        top_genres.update(artist.get("genres", []))
+    top_genres = list(top_genres)
+
+    # Extract top albums from top tracks
+    top_albums = {track['album']['name']: track['album'] for track in top_tracks}
+
+    context = {
+        "top_artists": top_artists,
+        "top_genres": top_genres,
+        "top_albums": top_albums.values(),
+        "top_tracks": top_tracks,
+        "recent_tracks": recent_tracks,
+        "playlists": playlists,
+    }
+
+    return render(request, 'music/home.html', context)
 
