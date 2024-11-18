@@ -53,7 +53,7 @@ def logout_view(request):
 
 @login_required
 def settings_view(request):
-    return render(request, 'music/settings.html')
+    return redirect('/accounts/spotify/login/')
 
 # Spotify Integration Views
 
@@ -103,7 +103,7 @@ def spotify_callback(request):
         messages.error(request, 'Spotify linking failed. Please try again.')
         return redirect('settings')
 
-    # Save the token to the database manually
+    # Save or update the token in the database
     social_account, _ = SocialAccount.objects.get_or_create(user=user, provider='spotify')
     social_token, _ = SocialToken.objects.get_or_create(account=social_account)
     social_token.token = access_token
@@ -113,6 +113,52 @@ def spotify_callback(request):
     logger.info(f"Spotify token successfully stored for user {user.username}")
     messages.success(request, 'Spotify successfully linked!')
     return redirect('home')
+
+@login_required
+def check_spotify_token(request):
+    user = request.user
+    try:
+        # Retrieve the existing token
+        social_token = SocialToken.objects.get(account__user=user, account__provider='spotify')
+
+        # Validate the token with Spotify API
+        response = requests.get(
+            "https://api.spotify.com/v1/me",
+            headers={"Authorization": f"Bearer {social_token.token}"}
+        )
+
+        # If the token is valid, return success
+        if response.status_code == 200:
+            return True
+
+        # If the token is expired, attempt to refresh it
+        elif response.status_code == 401:
+            logger.info(f"Spotify token expired for user {user.username}. Refreshing token...")
+            refresh_payload = {
+                'grant_type': 'refresh_token',
+                'refresh_token': social_token.token_secret,
+                'client_id': settings.SPOTIFY_CLIENT_ID,
+                'client_secret': settings.SPOTIFY_CLIENT_SECRET,
+            }
+            refresh_response = requests.post(token_url, data=refresh_payload)
+
+            if refresh_response.status_code == 200:
+                refresh_data = refresh_response.json()
+                social_token.token = refresh_data.get('access_token')
+                social_token.save()
+                logger.info(f"Spotify token refreshed successfully for user {user.username}")
+                return True
+            else:
+                logger.error(f"Failed to refresh Spotify token for user {user.username}")
+                return False
+
+        else:
+            logger.error(f"Unexpected response from Spotify API: {response.status_code}")
+            return False
+
+    except SocialToken.DoesNotExist:
+        logger.error(f"No Spotify token found for user {user.username}")
+        return False
 
 # Data Fetching for Top Artists
 
@@ -178,4 +224,3 @@ def home(request):
     }
 
     return render(request, 'music/home.html', context)
-
