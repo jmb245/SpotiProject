@@ -2,15 +2,14 @@
 
 import os
 from pathlib import Path
-from dotenv import load_dotenv
+from decouple import config
 
-# Load environment variables from .env file
-load_dotenv()
+
 print("Loaded SPOTIFY_REDIRECT_URI:", os.getenv("SPOTIFY_REDIRECT_URI"))
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Security settings
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'your-default-secret-key')
+SECRET_KEY = config('DJANGO_SECRET_KEY', default='your-default-secret-key')
 DEBUG = True
 ALLOWED_HOSTS = []
 
@@ -30,11 +29,20 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.spotify',
 ]
 
+LANGUAGES = [
+    ('en', 'English'),
+    ('fr', 'French'),
+    ('es', 'Spanish'),
+]
+LOCALE_PATHS = [BASE_DIR / 'locale']  # Directory for translation files
+
+
 # Middleware
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'allauth.account.middleware.AccountMiddleware',  # Add this line
@@ -114,9 +122,9 @@ SOCIALACCOUNT_AUTO_SIGNUP = False
 
 
 # Spotify OAuth settings
-SPOTIFY_CLIENT_ID = os.getenv('SPOTIFY_CLIENT_ID', 'your_client_id_here')
-SPOTIFY_CLIENT_SECRET = os.getenv('SPOTIFY_CLIENT_SECRET', 'your_client_secret_here')
-SPOTIFY_REDIRECT_URI = os.getenv('SPOTIFY_REDIRECT_URI', 'http://localhost:8000/spotify/callback/')
+SPOTIFY_CLIENT_ID = config('SPOTIFY_CLIENT_ID', default='your_client_id_here')
+SPOTIFY_CLIENT_SECRET = config('SPOTIFY_CLIENT_SECRET', default='your_client_secret_here')
+SPOTIFY_REDIRECT_URI = config('SPOTIFY_REDIRECT_URI', default='http://localhost:8000/spotify/callback/')
 
 SOCIALACCOUNT_PROVIDERS = {
     'spotify': {

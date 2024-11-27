@@ -11,6 +11,8 @@ from allauth.socialaccount.models import SocialToken, SocialAccount
 from django.urls import reverse
 from .forms import CustomUserCreationForm, CustomAuthenticationForm
 from django.conf import settings
+from django.utils.translation import gettext as _
+
 
 logger = logging.getLogger(__name__)
 
@@ -189,15 +191,24 @@ def fetch_spotify_data(url, user, params=None):
     else:
         logger.warning("No Spotify token found for user.")
     return {}
+from django.utils.translation import gettext as _
+from django.contrib.auth.decorators import login_required
+
 @login_required
 def home(request):
     # Fetch Spotify data for various sections
-    top_artists_data = fetch_spotify_data("https://api.spotify.com/v1/me/top/artists", request.user,
-                                          params={"limit": 5})
-    top_tracks_data = fetch_spotify_data("https://api.spotify.com/v1/me/top/tracks", request.user, params={"limit": 5})
-    recent_tracks_data = fetch_spotify_data("https://api.spotify.com/v1/me/player/recently-played", request.user,
-                                            params={"limit": 5})
-    playlists_data = fetch_spotify_data("https://api.spotify.com/v1/me/playlists", request.user, params={"limit": 5})
+    top_artists_data = fetch_spotify_data(
+        "https://api.spotify.com/v1/me/top/artists", request.user, params={"limit": 5}
+    )
+    top_tracks_data = fetch_spotify_data(
+        "https://api.spotify.com/v1/me/top/tracks", request.user, params={"limit": 5}
+    )
+    recent_tracks_data = fetch_spotify_data(
+        "https://api.spotify.com/v1/me/player/recently-played", request.user, params={"limit": 5}
+    )
+    playlists_data = fetch_spotify_data(
+        "https://api.spotify.com/v1/me/playlists", request.user, params={"limit": 5}
+    )
 
     # Parse data for easy use in the template
     top_artists = top_artists_data.get("items", [])
@@ -214,6 +225,9 @@ def home(request):
     # Extract top albums from top tracks
     top_albums = {track['album']['name']: track['album'] for track in top_tracks}
 
+    # Translate context messages
+    translated_message = _("Welcome to Spotify Wrapped!")
+
     context = {
         "top_artists": top_artists,
         "top_genres": top_genres,
@@ -221,6 +235,7 @@ def home(request):
         "top_tracks": top_tracks,
         "recent_tracks": recent_tracks,
         "playlists": playlists,
+        "message": translated_message,  # Add translated message
     }
 
     return render(request, 'music/home.html', context)
