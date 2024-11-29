@@ -64,6 +64,15 @@
         .button:hover {
             background-color: #0056b3;
         }
+
+        .hover-highlight {
+            display: inline-block;
+            transition: background-color 0.3s ease;
+        }
+
+        .hover-highlight:hover {
+            background-color: yellow;
+        }
     </style>
 </head>
 <body>
@@ -89,43 +98,43 @@
         <div class="swiper-wrapper">
             <!-- Slide 1: Top Artists -->
             <div class="swiper-slide">
-                <h2>{% trans "Your Top Artists" %}</h2>
+                <span class="hover-highlight"><h2>{% trans "Your Top Artists" %}</h2></span>
                 {% if top_artists %}
                     <ul>
                         {% for artist in top_artists %}
-                            <li>{{ artist.name }} - {% trans "Followers" %}: {{ artist.followers.total }}</li>
+                            <span class="hover-highlight"><li>{{ artist.name }} - {% trans "Followers" %}: {{ artist.followers.total }}</li>
                         {% endfor %}
                     </ul>
                 {% else %}
-                    <p>{% trans "No top artists found." %}</p>
+                    <span class="hover-highlight"><p>{% trans "No top artists found." %}</p>
                 {% endif %}
             </div>
 
             <!-- Slide 2: Top Genres -->
             <div class="swiper-slide">
-                <h2>{% trans "Your Top Genres" %}</h2>
+                <span class="hover-highlight"><h2>{% trans "Your Top Genres" %}</h2></span>
                 {% if top_genres %}
                     <ul>
                         {% for genre in top_genres %}
-                            <li>{{ genre }}</li>
+                            <span class="hover-highlight"><li>{{ genre }}</li></span>
                         {% endfor %}
                     </ul>
                 {% else %}
-                    <p>{% trans "No top genres found." %}</p>
+                    <span class="hover-highlight"><p>{% trans "No top genres found." %}</p></span>
                 {% endif %}
             </div>
 
             <!-- Slide 3: Top Tracks -->
             <div class="swiper-slide">
-                <h2>{% trans "Your Top Tracks" %}</h2>
+                <span class="hover-highlight"><h2>{% trans "Your Top Tracks" %}</h2></span>
                 {% if top_tracks %}
                     <ul>
                         {% for track in top_tracks %}
-                            <li>{{ track.name }} {% trans "by" %} {{ track.artists.0.name }} ({% trans "Album" %}: {{ track.album.name }})</li>
+                            <span class="hover-highlight"><li>{{ track.name }} {% trans "by" %} {{ track.artists.0.name }} ({% trans "Album" %}: {{ track.album.name }})</li></span>
                         {% endfor %}
                     </ul>
                 {% else %}
-                    <p>{% trans "No top tracks found." %}</p>
+                    <span class="hover-highlight"><p>{% trans "No top tracks found." %}</p></span>
                 {% endif %}
             </div>
         </div>
