@@ -1,0 +1,150 @@
+/* General styling for the login page */
+.spotify-login {
+    background-color: #000; /* Spotify's dark theme */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    align-items: center;
+    color: #fff;
+    padding: 150px 20px;
+    font: 700 41px/1.5 "Lexend", sans-serif;
+}
+
+/* Container for login form */
+.login-container {
+    display: flex;
+    flex-direction: column;
+    width: 400px;
+    max-width: 90%;
+}
+
+/* Spotify logo styling */
+.spotify-logo {
+    aspect-ratio: 3.62;
+    object-fit: contain;
+    object-position: center;
+    width: 170px;
+    max-width: 100%;
+}
+
+/* Welcome heading styling */
+.welcome-heading {
+    font-size: 36px;
+    line-height: 44px;
+    margin-top: 15px;
+    text-align: center;
+}
+
+/* Input fields styling */
+.username-input,
+.password-input {
+    align-self: stretch;
+    border-radius: 20px;
+    background-color: #fff;
+    margin-top: 20px;
+    min-height: 47px;
+    color: #1ed760; /* Spotify green */
+    font-weight: 500;
+    padding: 12px 10px;
+    border: none;
+    font-size: 16px;
+    box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Input focus effect */
+.username-input:focus,
+.password-input:focus {
+    outline: 2px solid #1ed760;
+}
+
+/* Login button styling */
+.login-button {
+    align-self: center;
+    border-radius: 20px;
+    background: #1ed760; /* Spotify green */
+    margin-top: 20px;
+    min-height: 47px;
+    width: 100%;
+    padding: 12px 10px;
+    font-size: 16px;
+    color: #000; /* Text color for contrast */
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.3s ease;
+}
+
+/* Login button hover effect */
+.login-button:hover {
+    background-color: #17c755;
+}
+
+/* Description text styling */
+.login-description {
+    color: #fff;
+    font-size: 16px;
+    font-weight: 400;
+    text-align: center;
+    margin-top: 15px;
+}
+
+/* Signup link container */
+.signup-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px;
+    font-size: 16px;
+    color: #fff;
+}
+
+/* Signup text */
+.signup-text {
+    margin-right: 5px;
+}
+
+/* Signup link */
+.signup-link {
+    color: #1ed760; /* Spotify green */
+    text-decoration: none;
+    font-weight: bold;
+}
+
+/* Signup link hover effect */
+.signup-link:hover {
+    text-decoration: underline;
+}
+
+/* Hidden labels for accessibility */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+    .spotify-login {
+        padding: 100px 20px;
+    }
+    .welcome-heading {
+        font-size: 28px;
+        line-height: 36px;
+    }
+    .login-container {
+        width: 90%;
+    }
+    .login-button {
+        font-size: 14px;
+    }
+    .username-input,
+    .password-input {
+        font-size: 14px;
+    }
+}
