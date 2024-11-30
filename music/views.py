@@ -12,7 +12,8 @@ from django.urls import reverse
 from .forms import CustomUserCreationForm, CustomAuthenticationForm
 from django.conf import settings
 from django.utils.translation import gettext as _
-
+from datetime import timedelta
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -67,54 +68,71 @@ def link_spotify(request):
 @login_required
 def spotify_callback(request):
     user = request.user
-    logger.info(f"User: {user} has accessed the callback")
 
-    # Retrieve the authorization code from the callback URL
+    # Extract authorization code from the URL
     code = request.GET.get('code')
     if not code:
         messages.error(request, 'Spotify authorization failed. Please try again.')
         return redirect('settings')
 
-    # Manually request the access token from Spotify
+    # Exchange authorization code for access token
     token_url = 'https://accounts.spotify.com/api/token'
     redirect_uri = settings.SPOTIFY_REDIRECT_URI
-    client_id = settings.SPOTIFY_CLIENT_ID
-    client_secret = settings.SPOTIFY_CLIENT_SECRET
     payload = {
         'grant_type': 'authorization_code',
         'code': code,
         'redirect_uri': redirect_uri,
-        'client_id': client_id,
-        'client_secret': client_secret,
+        'client_id': settings.SPOTIFY_CLIENT_ID,
+        'client_secret': settings.SPOTIFY_CLIENT_SECRET,
     }
-
-    # Request the token from Spotify
     response = requests.post(token_url, data=payload)
     if response.status_code != 200:
-        logger.error(f"Failed to get Spotify token. Status code: {response.status_code}")
-        messages.error(request, 'Spotify linking failed. Please try again.')
+        messages.error(request, 'Spotify token exchange failed. Please try again.')
         return redirect('settings')
 
-    # Parse the token data
     token_data = response.json()
     access_token = token_data.get('access_token')
     refresh_token = token_data.get('refresh_token')
+    spotify_user_url = "https://api.spotify.com/v1/me"
 
-    if not access_token:
-        logger.error("No access token returned from Spotify.")
-        messages.error(request, 'Spotify linking failed. Please try again.')
+    # Fetch Spotify user profile
+    spotify_user_response = requests.get(
+        spotify_user_url,
+        headers={"Authorization": f"Bearer {access_token}"}
+    )
+    if spotify_user_response.status_code != 200:
+        messages.error(request, 'Failed to fetch Spotify user profile. Please try again.')
         return redirect('settings')
 
-    # Save or update the token in the database
-    social_account, _ = SocialAccount.objects.get_or_create(user=user, provider='spotify')
+    spotify_user_data = spotify_user_response.json()
+    spotify_uid = spotify_user_data['id']
+
+    # Check if a SocialAccount already exists for this Spotify UID
+    social_account = SocialAccount.objects.filter(provider='spotify', uid=spotify_uid).first()
+
+    if social_account:
+        # If the social account already exists, associate it with the current user
+        if social_account.user != user:
+            messages.error(request, 'This Spotify account is already linked to another user.')
+            return redirect('settings')
+    else:
+        # Create a new SocialAccount and associate it with the user
+        social_account = SocialAccount.objects.create(
+            user=user,
+            provider='spotify',
+            uid=spotify_uid,
+            extra_data=spotify_user_data,
+        )
+
+    # Save or update the social token
     social_token, _ = SocialToken.objects.get_or_create(account=social_account)
     social_token.token = access_token
-    social_token.token_secret = refresh_token  # Use token_secret to store refresh token
+    social_token.token_secret = refresh_token
     social_token.save()
 
-    logger.info(f"Spotify token successfully stored for user {user.username}")
-    messages.success(request, 'Spotify successfully linked!')
+    messages.success(request, 'Spotify account successfully linked!')
     return redirect('home')
+
 
 @login_required
 def check_spotify_token(request):
@@ -136,6 +154,10 @@ def check_spotify_token(request):
         # If the token is expired, attempt to refresh it
         elif response.status_code == 401:
             logger.info(f"Spotify token expired for user {user.username}. Refreshing token...")
+
+            # Define the token URL
+            token_url = "https://accounts.spotify.com/api/token"
+
             refresh_payload = {
                 'grant_type': 'refresh_token',
                 'refresh_token': social_token.token_secret,
@@ -161,6 +183,7 @@ def check_spotify_token(request):
     except SocialToken.DoesNotExist:
         logger.error(f"No Spotify token found for user {user.username}")
         return False
+
 
 # Data Fetching for Top Artists
 
@@ -191,8 +214,8 @@ def fetch_spotify_data(url, user, params=None):
     else:
         logger.warning("No Spotify token found for user.")
     return {}
-from django.utils.translation import gettext as _
-from django.contrib.auth.decorators import login_required
+
+
 
 @login_required
 def home(request):
@@ -225,6 +248,18 @@ def home(request):
     # Extract top albums from top tracks
     top_albums = {track['album']['name']: track['album'] for track in top_tracks}
 
+    # Format top tracks for the template
+    formatted_top_tracks = [
+        {
+            "id": track.get("id"),
+            "name": track.get("name"),
+            "artist": track.get("artists", [{}])[0].get("name", ""),
+            "album": track.get("album", {}).get("name", ""),
+            "album_image": track.get("album", {}).get("images", [{}])[0].get("url", ""),
+        }
+        for track in top_tracks
+    ]
+
     # Translate context messages
     translated_message = _("Welcome to Spotify Wrapped!")
 
@@ -232,10 +267,50 @@ def home(request):
         "top_artists": top_artists,
         "top_genres": top_genres,
         "top_albums": top_albums.values(),
-        "top_tracks": top_tracks,
+        "top_tracks": formatted_top_tracks,
         "recent_tracks": recent_tracks,
         "playlists": playlists,
         "message": translated_message,  # Add translated message
     }
 
     return render(request, 'music/home.html', context)
+
+
+
+def contact_developers(request):
+    if request.method == 'POST':
+        # Process feedback form
+        name = request.POST.get('name')
+        email = request.POST.get('email')
+        message = request.POST.get('message')
+
+        if name and email and message:
+            try:
+                # Send email or process feedback
+                send_mail(
+                    subject=f"Feedback from {name}",
+                    message=message,
+                    from_email=email,
+                    recipient_list=['team@developers.com'],  # Replace with your team's email
+                )
+                messages.success(request, "Thank you for your feedback!")
+            except Exception as e:
+                messages.error(request, f"An error occurred: {str(e)}")
+        else:
+            messages.error(request, "Please fill out all fields.")
+
+    # Example team data for template
+    developers = [
+        {"name": "Jad Matthew Bardawil", "role": "Add role",
+         "bio": "Add bio.", "email": "Add email"},
+        {"name": "Benjamin Yohros", "role": "Add role",
+         "bio": "Add bio.", "email": "Add email"},
+        {"name": "Heeyoon Shin", "role": "Add role",
+         "bio": "Add bio.", "email": "Add email"},
+        {"name": "Natalie Burstein", "role": "Add role",
+         "bio": "Add bio.", "email": "Add email"},
+        {"name": "Emily Prieto", "role": "Add role",
+         "bio": "Add bio.", "email": "Add email"},
+    ]
+
+    return render(request, 'music/contact_developers.html', {"developers": developers})
