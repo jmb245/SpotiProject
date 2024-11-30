@@ -1,6 +1,8 @@
 # views.py
 
 import logging
+import random
+from django.http import JsonResponse
 import requests
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate
@@ -286,3 +288,43 @@ def contact_developer(request):
         form = ContactForm()
 
     return render(request, 'music/contact.html', {'form': form})
+
+def musician_guess(request):
+    token_info = request.session.get('token_info')
+    if not token_info:
+        return redirect('spotify_login')
+
+    sp = spotipy.Spotify(auth=token_info['access_token'])
+    top_artists = sp.current_user_top_artists(limit=10, time_range='medium_term')
+    artist_names = [artist['name'] for artist in top_artists['items']]
+
+    # Render the artist names in a quiz or interactive format
+    return render(request, 'music/musician_guess.html', {'artists': artist_names})
+
+def audio_guess(request):
+    token_info = request.session.get('token')
+    if not token_info:
+        return redirect('login')
+
+    sp = Spotify(auth=token_info['access_token'])
+    top_tracks = sp.current_user_top_tracks(limit=10, time_range='short_term')
+
+    # Randomly select a song
+    song = random.choice(top_tracks['items'])
+    snippet_url = song['preview_url']
+    options = [song['name']] + [random.choice(top_tracks['items'])['name'] for _ in range(3)]
+    random.shuffle(options)
+
+    context = {
+        'snippet_url': snippet_url,
+        'options': options,
+        'answer': song['name']
+    }
+    return render(request, 'music/audio_guess.html', context)
+
+def check_answer(request):
+    if request.method == 'POST':
+        answer = request.POST.get('answer')
+        user_guess = request.POST.get('guess')
+        correct = answer == user_guess
+        return JsonResponse({'correct': correct})

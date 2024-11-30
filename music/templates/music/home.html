@@ -20,3 +20,7 @@
 {% else %}
     <p>No wraps saved yet. Generate your first wrap!</p>
 {% endif %}
+
+<h2>List of Games You Can Play</h2>
+<a href="{% url 'musician_guess' %}" class="button">Guess Your Most Listened To Musician Game</a>
+<a href="{% url 'audio_guess' %}" class="button">Guess Song based on audio Game</a>

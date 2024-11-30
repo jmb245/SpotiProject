@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Guess the Song</title>
+</head>
+<body>
+    <h1>Guess the Song</h1>
+    <audio controls>
+        <source src="{{ snippet_url }}" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    <form id="guess-form">
+        {% for option in options %}
+            <label>
+                <input type="radio" name="guess" value="{{ option }}"> {{ option }}
+            </label><br>
+        {% endfor %}
+        <input type="hidden" name="answer" value="{{ answer }}">
+        <button type="button" onclick="submitGuess()">Submit</button>
+    </form>
+    <div id="result"></div>
+
+    <script>
+        function submitGuess() {
+            const form = document.getElementById('guess-form');
+            const formData = new FormData(form);
+
+            fetch("{% url 'check_answer' %}", {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('result').innerText = data.correct
+                    ? "Correct!"
+                    : "Wrong! Try again.";
+            });
+        }
+    </script>
+</body>
+</html>
