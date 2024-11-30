@@ -304,7 +304,7 @@ def musician_guess(request):
 def audio_guess(request):
     token_info = request.session.get('token')
     if not token_info:
-        return redirect('login')
+        return redirect('spotify_login')
 
     sp = Spotify(auth=token_info['access_token'])
     top_tracks = sp.current_user_top_tracks(limit=10, time_range='short_term')
