@@ -5,6 +5,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # Load environment variables from .env
+# should be path to env file. (ex: /Users/jadbardawil/Desktop/(etc..)/.env)
+# replace accordingly
 load_dotenv(dotenv_path='/Users/jadbardawil/Desktop/SpotiProject/SpotiProject/.env')
 
 # Base Directory

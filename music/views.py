@@ -12,6 +12,8 @@ from django.urls import reverse
 from .forms import CustomUserCreationForm, CustomAuthenticationForm
 from django.conf import settings
 from django.utils.translation import gettext as _
+from datetime import timedelta
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
