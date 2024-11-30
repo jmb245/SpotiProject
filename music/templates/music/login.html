@@ -1,52 +1,8 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Log In</title>
-    <link rel="stylesheet" href="{% static 'music/login.css' %}">
-</head>
-<body>
-<div class="spotify-login">
-    <form method="post" class="login-container">
-        {% csrf_token %}
-        <img
-            loading="lazy"
-            src="https://cdn.builder.io/api/v1/image/assets/TEMP/c339cb8114b0be4c35c3ce9773cab279ae9e9b8258600303231ee894217ac875?placeholderIfAbsent=true&apiKey=2d0b35e8edf147b698c4739def85473b"
-            class="spotify-logo"
-            alt="Spotify Logo"
-        />
-        <h1 class="welcome-heading">Welcome to Spotify Wrapped.</h1>
-        <!-- Username Field -->
-        <label for="id_username" class="visually-hidden">Username</label>
-        <input
-            type="text"
-            id="id_username"
-            name="username"
-            placeholder="Username"
-            required
-            class="username-input"
-        />
-        <!-- Password Field -->
-        <label for="id_password" class="visually-hidden">Password</label>
-        <input
-            type="password"
-            id="id_password"
-            name="password"
-            placeholder="Password"
-            required
-            class="password-input"
-        />
-        <!-- Submit Button -->
-        <button type="submit" class="login-button">Log In</button>
-        <p class="login-description">Log in to view your listening habits.</p>
-        <!-- Signup Link -->
-        <div class="signup-container">
-            <span class="signup-text">Don’t have an account?</span>
-            <a href="{% url 'signup' %}" class="signup-link" tabindex="0">Sign up here</a>
-        </div>
-    </form>
-</div>
-</body>
-</html>
+<!-- music/templates/music/login.html -->
+<h1>Log In</h1>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Log In</button>
+</form>
+<p>Don’t have an account? <a href="{% url 'signup' %}">Sign up here</a></p>

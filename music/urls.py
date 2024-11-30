@@ -11,5 +11,10 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('settings/', views.settings_view, name='settings'),
-    path('contact/', views.contact_developers, name='contact_developers'),
+    path('generate-wrap/', views.generate_wrap, name='generate_wrap'),
+    path('wrap/<int:wrap_id>/', views.view_wrap, name='view_wrap'),
+    path('wrap/<int:wrap_id>/delete/', views.delete_wrap, name='delete_wrap'),
+    path('generate-holiday-wrap/', views.generate_wrap, {'holiday': True}, name='generate_holiday_wrap'),
+    path('contact/', views.contact_developer, name='contact_developer'),
+
 ]

@@ -1,0 +1,14 @@
+{% extends 'music/base.html' %}
+
+{% block title %}Contact Developer{% endblock %}
+
+{% block content %}
+<h1>Contact the Developer</h1>
+<p>If you have any questions or feedback, feel free to send a message.</p>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="button">Send Message</button>
+</form>
+{% endblock %}

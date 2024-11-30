@@ -2,7 +2,7 @@
 
 import logging
 import requests
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
@@ -11,9 +11,9 @@ from allauth.socialaccount.models import SocialToken, SocialAccount
 from django.urls import reverse
 from .forms import CustomUserCreationForm, CustomAuthenticationForm
 from django.conf import settings
-from django.utils.translation import gettext as _
-from datetime import timedelta
-from django.utils import timezone
+from .models import Wrap
+from datetime import datetime
+from .forms import ContactForm
 
 logger = logging.getLogger(__name__)
 
@@ -68,71 +68,54 @@ def link_spotify(request):
 @login_required
 def spotify_callback(request):
     user = request.user
+    logger.info(f"User: {user} has accessed the callback")
 
-    # Extract authorization code from the URL
+    # Retrieve the authorization code from the callback URL
     code = request.GET.get('code')
     if not code:
         messages.error(request, 'Spotify authorization failed. Please try again.')
         return redirect('settings')
 
-    # Exchange authorization code for access token
+    # Manually request the access token from Spotify
     token_url = 'https://accounts.spotify.com/api/token'
     redirect_uri = settings.SPOTIFY_REDIRECT_URI
+    client_id = settings.SPOTIFY_CLIENT_ID
+    client_secret = settings.SPOTIFY_CLIENT_SECRET
     payload = {
         'grant_type': 'authorization_code',
         'code': code,
         'redirect_uri': redirect_uri,
-        'client_id': settings.SPOTIFY_CLIENT_ID,
-        'client_secret': settings.SPOTIFY_CLIENT_SECRET,
+        'client_id': client_id,
+        'client_secret': client_secret,
     }
+
+    # Request the token from Spotify
     response = requests.post(token_url, data=payload)
     if response.status_code != 200:
-        messages.error(request, 'Spotify token exchange failed. Please try again.')
+        logger.error(f"Failed to get Spotify token. Status code: {response.status_code}")
+        messages.error(request, 'Spotify linking failed. Please try again.')
         return redirect('settings')
 
+    # Parse the token data
     token_data = response.json()
     access_token = token_data.get('access_token')
     refresh_token = token_data.get('refresh_token')
-    spotify_user_url = "https://api.spotify.com/v1/me"
 
-    # Fetch Spotify user profile
-    spotify_user_response = requests.get(
-        spotify_user_url,
-        headers={"Authorization": f"Bearer {access_token}"}
-    )
-    if spotify_user_response.status_code != 200:
-        messages.error(request, 'Failed to fetch Spotify user profile. Please try again.')
+    if not access_token:
+        logger.error("No access token returned from Spotify.")
+        messages.error(request, 'Spotify linking failed. Please try again.')
         return redirect('settings')
 
-    spotify_user_data = spotify_user_response.json()
-    spotify_uid = spotify_user_data['id']
-
-    # Check if a SocialAccount already exists for this Spotify UID
-    social_account = SocialAccount.objects.filter(provider='spotify', uid=spotify_uid).first()
-
-    if social_account:
-        # If the social account already exists, associate it with the current user
-        if social_account.user != user:
-            messages.error(request, 'This Spotify account is already linked to another user.')
-            return redirect('settings')
-    else:
-        # Create a new SocialAccount and associate it with the user
-        social_account = SocialAccount.objects.create(
-            user=user,
-            provider='spotify',
-            uid=spotify_uid,
-            extra_data=spotify_user_data,
-        )
-
-    # Save or update the social token
+    # Save or update the token in the database
+    social_account, _ = SocialAccount.objects.get_or_create(user=user, provider='spotify')
     social_token, _ = SocialToken.objects.get_or_create(account=social_account)
     social_token.token = access_token
-    social_token.token_secret = refresh_token
+    social_token.token_secret = refresh_token  # Use token_secret to store refresh token
     social_token.save()
 
-    messages.success(request, 'Spotify account successfully linked!')
+    logger.info(f"Spotify token successfully stored for user {user.username}")
+    messages.success(request, 'Spotify successfully linked!')
     return redirect('home')
-
 
 @login_required
 def check_spotify_token(request):
@@ -154,10 +137,6 @@ def check_spotify_token(request):
         # If the token is expired, attempt to refresh it
         elif response.status_code == 401:
             logger.info(f"Spotify token expired for user {user.username}. Refreshing token...")
-
-            # Define the token URL
-            token_url = "https://accounts.spotify.com/api/token"
-
             refresh_payload = {
                 'grant_type': 'refresh_token',
                 'refresh_token': social_token.token_secret,
@@ -183,7 +162,6 @@ def check_spotify_token(request):
     except SocialToken.DoesNotExist:
         logger.error(f"No Spotify token found for user {user.username}")
         return False
-
 
 # Data Fetching for Top Artists
 
@@ -214,103 +192,97 @@ def fetch_spotify_data(url, user, params=None):
     else:
         logger.warning("No Spotify token found for user.")
     return {}
-
-
-
 @login_required
 def home(request):
-    # Fetch Spotify data for various sections
-    top_artists_data = fetch_spotify_data(
-        "https://api.spotify.com/v1/me/top/artists", request.user, params={"limit": 5}
-    )
-    top_tracks_data = fetch_spotify_data(
-        "https://api.spotify.com/v1/me/top/tracks", request.user, params={"limit": 5}
-    )
-    recent_tracks_data = fetch_spotify_data(
-        "https://api.spotify.com/v1/me/player/recently-played", request.user, params={"limit": 5}
-    )
-    playlists_data = fetch_spotify_data(
-        "https://api.spotify.com/v1/me/playlists", request.user, params={"limit": 5}
-    )
+    wraps = Wrap.objects.filter(user=request.user).order_by('-created_at')
+    return render(request, 'music/home.html', {'wraps': wraps})
 
-    # Parse data for easy use in the template
-    top_artists = top_artists_data.get("items", [])
-    top_tracks = top_tracks_data.get("items", [])
-    recent_tracks = recent_tracks_data.get("items", [])
-    playlists = playlists_data.get("items", [])
+@login_required
+def generate_wrap(request):
+    user = request.user
+    logger.info(f"Generating a new wrap for user: {user.username}")
 
-    # Extract unique genres from top artists
-    top_genres = set()
-    for artist in top_artists:
-        top_genres.update(artist.get("genres", []))
-    top_genres = list(top_genres)
-
-    # Extract top albums from top tracks
-    top_albums = {track['album']['name']: track['album'] for track in top_tracks}
-
-    # Format top tracks for the template
-    formatted_top_tracks = [
-        {
-            "id": track.get("id"),
-            "name": track.get("name"),
-            "artist": track.get("artists", [{}])[0].get("name", ""),
-            "album": track.get("album", {}).get("name", ""),
-            "album_image": track.get("album", {}).get("images", [{}])[0].get("url", ""),
-        }
-        for track in top_tracks
-    ]
-
-    # Translate context messages
-    translated_message = _("Welcome to Spotify Wrapped!")
-
-    context = {
-        "top_artists": top_artists,
-        "top_genres": top_genres,
-        "top_albums": top_albums.values(),
-        "top_tracks": formatted_top_tracks,
-        "recent_tracks": recent_tracks,
-        "playlists": playlists,
-        "message": translated_message,  # Add translated message
+    # Check if today is a holiday
+    holidays = {
+        '10-31': 'Halloween',  # October 31
+        '12-25': 'Christmas',  # December 25
     }
 
-    return render(request, 'music/home.html', context)
+    # Allow overriding the date for testing
+    override_date = request.GET.get('override_date')  # Expect format 'MM-DD'
+    today = datetime.strptime(override_date, '%m-%d').date() if override_date else datetime.now().date()
 
+    holiday_name = holidays.get(today.strftime('%m-%d'), None)
 
+    # Detect if generating a holiday wrap
+    is_holiday_wrap = 'holiday' in request.GET or bool(holiday_name)
 
-def contact_developers(request):
-    if request.method == 'POST':
-        # Process feedback form
-        name = request.POST.get('name')
-        email = request.POST.get('email')
-        message = request.POST.get('message')
+    # Fetch Spotify data using helper function
+    top_artists_data = fetch_spotify_data("https://api.spotify.com/v1/me/top/artists", user, params={"limit": 5})
+    top_tracks_data = fetch_spotify_data("https://api.spotify.com/v1/me/top/tracks", user, params={"limit": 5})
+    recent_tracks_data = fetch_spotify_data("https://api.spotify.com/v1/me/player/recently-played", user,
+                                            params={"limit": 5})
+    playlists_data = fetch_spotify_data("https://api.spotify.com/v1/me/playlists", user, params={"limit": 5})
 
-        if name and email and message:
-            try:
-                # Send email or process feedback
-                send_mail(
-                    subject=f"Feedback from {name}",
-                    message=message,
-                    from_email=email,
-                    recipient_list=['team@developers.com'],  # Replace with your team's email
-                )
-                messages.success(request, "Thank you for your feedback!")
-            except Exception as e:
-                messages.error(request, f"An error occurred: {str(e)}")
-        else:
-            messages.error(request, "Please fill out all fields.")
-
-    # Example team data for template
-    developers = [
-        {"name": "Jad Matthew Bardawil", "role": "Add role",
-         "bio": "Add bio.", "email": "Add email"},
-        {"name": "Benjamin Yohros", "role": "Add role",
-         "bio": "Add bio.", "email": "Add email"},
-        {"name": "Heeyoon Shin", "role": "Add role",
-         "bio": "Add bio.", "email": "Add email"},
-        {"name": "Natalie Burstein", "role": "Add role",
-         "bio": "Add bio.", "email": "Add email"},
-        {"name": "Emily Prieto", "role": "Add role",
-         "bio": "Add bio.", "email": "Add email"},
+    # Parse data for slides
+    slides = [
+        {"title": "Welcome to Your Spotify Wrap", "content": ['Use the buttons on the bottom to navigate!']},
+        {"title": "Are You Ready?", "content": ['Get ready to see all what you have been listening to on Spotify.']},
+        {"title": "Your Top Artists", "content": [artist['name'] for artist in top_artists_data.get('items', [])]},
+        {"title": "Your Top Genres", "content": list(
+            set(genre for artist in top_artists_data.get('items', []) for genre in artist.get('genres', [])))},
+        {"title": "Your Top Albums",
+         "content": list({track['album']['name'] for track in top_tracks_data.get('items', [])})},
+        {"title": "Your Top Tracks", "content": [f"{track['name']} by {track['artists'][0]['name']}" for track in
+                                                 top_tracks_data.get('items', [])]},
+        {"title": "Your Recently Played Tracks",
+         "content": [f"{item['track']['name']} by {item['track']['artists'][0]['name']}" for item in
+                     recent_tracks_data.get('items', [])]},
+        {"title": "Your Playlists",
+         "content": [f"{playlist['name']} - {playlist['tracks']['total']} tracks" for playlist in
+                     playlists_data.get('items', [])]},
+        {"title": "Thank You for Viewing", "content": ['We hope you enjoyed seeing what you have listened to.']},
     ]
 
-    return render(request, 'music/contact_developers.html', {"developers": developers})
+    # Add holiday-specific slides if generating a holiday wrap
+    if is_holiday_wrap:
+        holiday_greeting = f"Happy {holiday_name or 'Holiday'}!"  # Use detected holiday or default
+        slides.insert(0, {"title": holiday_greeting, "content": ["Enjoy your festive Spotify wrap!"]})
+        slides.append({"title": "This Holiday Has Been Wrapped!", "content": ["🎄 Spread the joy with festive music! 🎃"]})
+
+    # Save the wrap in the database with appropriate type
+    wrap = Wrap.objects.create(
+        user=user,
+        title=f"{'Holiday' if is_holiday_wrap else 'Spotify'} Wrap",
+        content={"slides": slides},
+        wrap_type='holiday' if is_holiday_wrap else 'regular'
+    )
+    logger.info(f"{'Holiday' if is_holiday_wrap else 'Regular'} wrap generated successfully for user {user.username}")
+    messages.success(request, f"New {'Holiday' if is_holiday_wrap else ''} Wrap generated successfully!")
+    return redirect('home')
+
+@login_required
+def delete_wrap(request, wrap_id):
+    wrap = get_object_or_404(Wrap, id=wrap_id, user=request.user)
+    wrap.delete()
+    messages.success(request, 'Wrap deleted successfully!')
+    return redirect('home')
+
+@login_required
+def view_wrap(request, wrap_id):
+    wrap = get_object_or_404(Wrap, id=wrap_id, user=request.user)
+    return render(request, 'music/view_wrap.html', {'wrap': wrap})
+
+def contact_developer(request):
+    if request.method == 'POST':
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Your message has been sent to the developer!")
+            return redirect('home')  # Redirect to home or any desired page
+        else:
+            messages.error(request, "There was an error with your submission. Please try again.")
+    else:
+        form = ContactForm()
+
+    return render(request, 'music/contact.html', {'form': form})

@@ -1,0 +1,17 @@
+/* Default (Light Theme) */
+body.light-mode {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+/* Dark Theme */
+body.dark-mode {
+    background-color: #121212;
+    color: #ffffff;
+}
+
+/* Blue Theme (Optional Additional Theme) */
+body.blue-mode {
+    background-color: #001f3f;
+    color: #ffffff;
+}

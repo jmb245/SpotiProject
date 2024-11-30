@@ -1,0 +1,208 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ wrap.title }}</title>
+    <style>
+        /* General Styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            background-color: #f9f9f9;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+        h1 {
+            margin: 10px 0;
+            font-size: 2.2em;
+        }
+
+        /* Slide Container */
+        #slide-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            padding: 10px;
+        }
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 100%;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            transition: all 0.5s ease-in-out;
+            box-sizing: border-box;
+            background-color: #ffffff;
+        }
+        .slide.active {
+            left: 0;
+        }
+        .slide.previous {
+            left: -100%;
+        }
+        .slide h2 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+        }
+        .slide ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        .slide ul li {
+            margin: 8px 0;
+            font-size: 1.2em;
+        }
+
+        /* Progress Indicator */
+        .progress-indicator {
+            position: fixed;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1em;
+            background: #f1f1f1;
+            padding: 5px 15px;
+            border-radius: 5px;
+        }
+
+        /* Navigation Buttons */
+        .navigation-buttons {
+            position: fixed;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+        }
+        button, a.button {
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+        }
+        button:hover, a.button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Responsive Design: Mobile */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+            .slide h2 {
+                font-size: 1.3em;
+            }
+            .slide ul li {
+                font-size: 1em;
+            }
+            button, a.button {
+                padding: 8px 16px;
+                font-size: 0.9em;
+            }
+            .progress-indicator {
+                bottom: 60px;
+            }
+            .navigation-buttons {
+                bottom: 15px;
+                gap: 10px;
+            }
+        }
+
+        /* Responsive Design: Tablet */
+        @media (max-width: 1024px) {
+            h1 {
+                font-size: 2em;
+            }
+            .slide h2 {
+                font-size: 1.4em;
+            }
+            .slide ul li {
+                font-size: 1.1em;
+            }
+            button, a.button {
+                padding: 9px 18px;
+                font-size: 0.95em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>{{ wrap.title }}</h1>
+    <div id="slide-container">
+        {% for slide in wrap.content.slides %}
+            <div class="slide {% if forloop.first %}active{% endif %}">
+                <h2>{{ slide.title }}</h2>
+                {% if slide.content %}
+                    <ul>
+                        {% for item in slide.content %}
+                            <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>No data available for this slide.</p>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+    <div class="progress-indicator">
+        <span id="progress">1</span> / {{ wrap.content.slides|length }}
+    </div>
+    <div class="navigation-buttons">
+        <button id="prev-slide">Previous</button>
+        <button id="next-slide">Next</button>
+        <a href="{% url 'home' %}" class="button">Back to Home</a>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const progress = document.getElementById('progress');
+        let currentSlide = 0;
+
+        function updateSlides() {
+            slides.forEach((slide, index) => {
+                slide.classList.remove('active', 'previous');
+                if (index === currentSlide) {
+                    slide.classList.add('active');
+                } else if (index === currentSlide - 1) {
+                    slide.classList.add('previous');
+                }
+            });
+            progress.textContent = currentSlide + 1;
+        }
+
+        document.getElementById('prev-slide').addEventListener('click', () => {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlides();
+            }
+        });
+
+        document.getElementById('next-slide').addEventListener('click', () => {
+            if (currentSlide < slides.length - 1) {
+                currentSlide++;
+                updateSlides();
+            }
+        });
+
+        updateSlides(); // Initialize
+    </script>
+</body>
+</html>

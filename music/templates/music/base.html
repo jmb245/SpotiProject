@@ -1,39 +1,59 @@
-
-{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    {% load static %} <!-- This line enables the static tag -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spotify Integration</title>
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <title>{% block title %}My Project{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'music/styles.css' %}">
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
     <header>
-        <nav>
-            <ul>
-                <li><a href="{% url 'home' %}">Home</a></li>
-                {% if user.is_authenticated %}
-                    <li><a href="{% url 'settings' %}">Settings</a></li>
-                    <li><a href="{% url 'logout' %}">Logout</a></li>
-                    <li><a href="{% url 'link_spotify' %}">Link Spotify</a></li>
-                {% else %}
-                    <li><a href="{% url 'login' %}">Login</a></li>
-                    <li><a href="{% url 'signup' %}">Sign Up</a></li>
-                {% endif %}
-                <li><a href="{% url 'contact_developers' %}">Contact Developers</a></li>
-            </ul>
-        </nav>
+        <div class="navigation">
+            <button id="theme-toggle">Switch Theme</button>
+        </div>
     </header>
 
     <main>
-        {% block content %}
-        <!-- Page-specific content will go here -->
-        {% endblock %}
+        {% block content %}{% endblock %}
     </main>
 
-    <footer>
-        <p>&copy; 2024 Spotify Integration Project</p>
-    </footer>
+    <script>
+    // Theme toggling logic
+    function toggleTheme() {
+        const body = document.body;
+        const currentTheme = body.classList.contains('dark-mode') ? 'dark' :
+                             body.classList.contains('blue-mode') ? 'blue' : 'light';
+
+        // Determine the next theme
+        let newTheme = 'light';
+        if (currentTheme === 'light') {
+            newTheme = 'dark';
+        } else if (currentTheme === 'dark') {
+            newTheme = 'blue';
+        }
+
+        // Apply the new theme
+        body.classList.remove('light-mode', 'dark-mode', 'blue-mode');
+        body.classList.add(`${newTheme}-mode`);
+        document.cookie = `theme=${newTheme}; path=/;`;
+    }
+
+    // Load theme from cookies on page load
+    function loadThemeFromCookies() {
+        const cookies = document.cookie.split('; ');
+        const themeCookie = cookies.find(cookie => cookie.startsWith('theme='));
+        const theme = themeCookie ? themeCookie.split('=')[1] : 'light';
+
+        document.body.classList.add(`${theme}-mode`);
+    }
+
+    // Attach event listener
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+        loadThemeFromCookies();
+    });
+</script>
 </body>
 </html>
