@@ -13,7 +13,6 @@ from .forms import CustomUserCreationForm, CustomAuthenticationForm
 from django.conf import settings
 from django.utils.translation import gettext as _
 
-
 logger = logging.getLogger(__name__)
 
 # User Authentication Views
@@ -213,8 +212,8 @@ def fetch_spotify_data(url, user, params=None):
     else:
         logger.warning("No Spotify token found for user.")
     return {}
-from django.utils.translation import gettext as _
-from django.contrib.auth.decorators import login_required
+
+
 
 @login_required
 def home(request):
@@ -247,6 +246,18 @@ def home(request):
     # Extract top albums from top tracks
     top_albums = {track['album']['name']: track['album'] for track in top_tracks}
 
+    # Format top tracks for the template
+    formatted_top_tracks = [
+        {
+            "id": track.get("id"),
+            "name": track.get("name"),
+            "artist": track.get("artists", [{}])[0].get("name", ""),
+            "album": track.get("album", {}).get("name", ""),
+            "album_image": track.get("album", {}).get("images", [{}])[0].get("url", ""),
+        }
+        for track in top_tracks
+    ]
+
     # Translate context messages
     translated_message = _("Welcome to Spotify Wrapped!")
 
@@ -254,10 +265,50 @@ def home(request):
         "top_artists": top_artists,
         "top_genres": top_genres,
         "top_albums": top_albums.values(),
-        "top_tracks": top_tracks,
+        "top_tracks": formatted_top_tracks,
         "recent_tracks": recent_tracks,
         "playlists": playlists,
         "message": translated_message,  # Add translated message
     }
 
     return render(request, 'music/home.html', context)
+
+
+
+def contact_developers(request):
+    if request.method == 'POST':
+        # Process feedback form
+        name = request.POST.get('name')
+        email = request.POST.get('email')
+        message = request.POST.get('message')
+
+        if name and email and message:
+            try:
+                # Send email or process feedback
+                send_mail(
+                    subject=f"Feedback from {name}",
+                    message=message,
+                    from_email=email,
+                    recipient_list=['team@developers.com'],  # Replace with your team's email
+                )
+                messages.success(request, "Thank you for your feedback!")
+            except Exception as e:
+                messages.error(request, f"An error occurred: {str(e)}")
+        else:
+            messages.error(request, "Please fill out all fields.")
+
+    # Example team data for template
+    developers = [
+        {"name": "Jad Matthew Bardawil", "role": "Add role",
+         "bio": "Add bio.", "email": "Add email"},
+        {"name": "Benjamin Yohros", "role": "Add role",
+         "bio": "Add bio.", "email": "Add email"},
+        {"name": "Heeyoon Shin", "role": "Add role",
+         "bio": "Add bio.", "email": "Add email"},
+        {"name": "Natalie Burstein", "role": "Add role",
+         "bio": "Add bio.", "email": "Add email"},
+        {"name": "Emily Prieto", "role": "Add role",
+         "bio": "Add bio.", "email": "Add email"},
+    ]
+
+    return render(request, 'music/contact_developers.html', {"developers": developers})

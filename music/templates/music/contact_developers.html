@@ -1,0 +1,39 @@
+{% extends 'music/base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1>Contact the Developers</h1>
+    <p>Meet the talented team behind this project:</p>
+
+    <div class="developers">
+        {% for dev in developers %}
+        <div class="developer-card">
+            <h3>{{ dev.name }}</h3>
+            <p><strong>Role:</strong> {{ dev.role }}</p>
+            <p>{{ dev.bio }}</p>
+            <p><a href="mailto:{{ dev.email }}">Contact: {{ dev.email }}</a></p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <hr>
+
+    <h2>Send Feedback</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="name">Your Name</label>
+            <input type="text" id="name" name="name" placeholder="Your name" required>
+        </div>
+        <div class="form-group">
+            <label for="email">Your Email</label>
+            <input type="email" id="email" name="email" placeholder="Your email" required>
+        </div>
+        <div class="form-group">
+            <label for="message">Your Message</label>
+            <textarea id="message" name="message" placeholder="Your feedback" rows="5" required></textarea>
+        </div>
+        <button type="submit" class="button">Send Feedback</button>
+    </form>
+</div>
+{% endblock %}

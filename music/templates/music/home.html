@@ -1,4 +1,5 @@
 {% load i18n %}
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,14 +9,13 @@
 
     <!-- Swiper.js Styles -->
     <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
+    <link id="theme-stylesheet" rel="stylesheet" href="{% static 'music/light.css' %}">
 
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f9f9f9;
-            color: #333;
         }
 
         .swiper-container {
@@ -64,9 +64,34 @@
         .button:hover {
             background-color: #0056b3;
         }
+
+
+        /* Theme Toggle Button */
+        #toggle-theme {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+        }
+
+        #toggle-theme img {
+            width: 30px;
+            height: 30px;
+        }
+
+        #toggle-theme:hover img {
+            opacity: 0.8;
+        }
     </style>
 </head>
 <body>
+    <!-- Theme Toggle Button -->
+    <button id="toggle-theme">
+        <img src="{% static 'music/icons/theme-icon.svg' %}" alt="{% trans 'Switch Theme' %}">
+    </button>
+
     <!-- Language Switcher -->
     <form method="post" action="/i18n/setlang/" class="language-switcher">
         {% csrf_token %}
@@ -77,6 +102,12 @@
         </select>
         <button type="submit">{% trans "Switch" %}</button>
     </form>
+
+    <div class="contact-developers-section">
+        <h2>{% trans "Have Feedback?" %}</h2>
+        <p>{% trans "We’d love to hear from you! Reach out to the team and let us know your thoughts." %}</p>
+        <a href="{% url 'contact_developers' %}" class="button">{% trans "Contact the Developers" %}</a>
+    </div>
 
     <!-- Navigation Links -->
     <div class="navigation">
@@ -93,7 +124,11 @@
                 {% if top_artists %}
                     <ul>
                         {% for artist in top_artists %}
-                            <li>{{ artist.name }} - {% trans "Followers" %}: {{ artist.followers.total }}</li>
+                            <li>
+                                <img src="{{ artist.image_url }}" alt="{{ artist.name }}" width="50">
+                                <span>{{ artist.name }}</span> -
+                                <span>{% trans "Followers" %}: {{ artist.followers.total }}</span>
+                            </li>
                         {% endfor %}
                     </ul>
                 {% else %}
@@ -121,7 +156,25 @@
                 {% if top_tracks %}
                     <ul>
                         {% for track in top_tracks %}
-                            <li>{{ track.name }} {% trans "by" %} {{ track.artists.0.name }} ({% trans "Album" %}: {{ track.album.name }})</li>
+                            <li>
+                                <img src="{{ track.album_image }}" alt="{{ track.name }}" width="50">
+                                <span>{{ track.name }}</span> -
+                                <span>{% trans "By" %} {{ track.artist }}</span>
+                                <div>
+                                    {% if track.id %}
+                                        <iframe
+                                            src="https://open.spotify.com/embed/track/{{ track.id }}"
+                                            width="300"
+                                            height="80"
+                                            frameborder="0"
+                                            allowtransparency="true"
+                                            allow="encrypted-media">
+                                        </iframe>
+                                    {% else %}
+                                        <p><em>{% trans "Playback unavailable for this track." %}</em></p>
+                                    {% endif %}
+                                </div>
+                            </li>
                         {% endfor %}
                     </ul>
                 {% else %}
@@ -149,6 +202,30 @@
                 el: '.swiper-pagination',
                 clickable: true,
             },
+        });
+
+        // Theme Toggle Script
+        function setTheme(theme) {
+            const themeStylesheet = document.getElementById('theme-stylesheet');
+            themeStylesheet.setAttribute('href',
+                theme === 'dark' ? '{% static "music/dark.css" %}' :
+                theme === 'light' ? '{% static "music/light.css" %}' :
+                '{% static "music/color.css" %}'
+            );
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentTheme = localStorage.getItem('theme') || 'light';
+            setTheme(currentTheme);
+
+            const toggleButton = document.getElementById('toggle-theme');
+            toggleButton.onclick = () => {
+                const currentTheme = localStorage.getItem('theme') || 'light';
+                const newTheme = currentTheme === 'dark' ? 'light' :
+                                 currentTheme === 'light' ? 'colorful' : 'dark';
+                localStorage.setItem('theme', newTheme);
+                setTheme(newTheme);
+            };
         });
     </script>
 </body>
