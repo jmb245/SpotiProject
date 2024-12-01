@@ -109,3 +109,60 @@
     font-size: 14px;
     color: #555;
 }
+
+/* Links in lists */
+ul li a {
+    text-decoration: none;
+    color: #007bff;
+    transition: color 0.3s ease, text-shadow 0.2s ease;
+}
+
+ul li a:hover {
+    color: #0056b3;
+    text-shadow: 0 0 5px #0056b3;
+}
+
+/* Image hover effects in slides */
+.swiper-slide img {
+    border-radius: 8px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.swiper-slide img:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* List items hover */
+ul li {
+    transition: background-color 0.3s ease, padding-left 0.2s ease;
+}
+
+ul li:hover {
+    background-color: #f8f9fa;
+    padding-left: 10px;
+}
+
+/* General hoverable text styles */
+.slide-content {
+    font-size: 18px;
+    color: #333;
+    transition: color 0.3s ease, transform 0.2s ease;
+}
+
+.slide-content:hover {
+    color: #007bff; /* Highlight color */
+    transform: scale(1.1); /* Slightly enlarge the text */
+    text-shadow: 0 0 10px rgba(0, 123, 255, 0.5); /* Add a glow effect */
+}
+
+/* Optional: Highlight individual words */
+.slide-content span {
+    display: inline-block;
+    transition: background-color 0.3s ease, padding 0.2s ease;
+}
+
+.slide-content span:hover {
+    background-color: #f1f1f1;
+    padding: 2px 4px;
+}
