@@ -341,39 +341,6 @@ def refresh_token(token_info):
     return response.json()
 
 @login_required
-def musician_guess(request):
-    token_info = request.session.get('token_info')
-    if not token_info:
-        return redirect('spotify_login')  # Ensure proper redirection
-
-    # Refresh the token if expired
-    if 'expires_in' in token_info and token_info['expires_in'] <= 0:
-        token_info = refresh_token(token_info)
-        request.session['token_info'] = token_info
-
-    headers = {
-        "Authorization": f"Bearer {token_info['access_token']}",
-    }
-    top_artists_url = "https://api.spotify.com/v1/me/top/artists"
-    response = requests.get(top_artists_url, headers=headers, params={"limit": 10, "time_range": "medium_term"})
-
-    if response.status_code == 401:  # Token might have expired
-        return redirect('spotify_login')
-
-    data = response.json()
-    artist_names = [artist['name'] for artist in data['items']]
-
-    if request.method == 'POST':
-        user_guess = request.POST.get('guess').lower()
-        if user_guess in (name.lower() for name in artist_names):
-            message = "Correct! That artist is in your top 10."
-        else:
-            message = "Not quite! Try again."
-        return render(request, 'music/musician_guess.html', {'message': message, 'artists': artist_names})
-
-    return render(request, 'music/musician_guess.html', {'artists': artist_names})
-
-@login_required
 def audio_guess(request):
     access_token = request.session.get('access_token')
 
