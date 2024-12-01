@@ -69,7 +69,7 @@
         /* Progress Indicator */
         .progress-indicator {
             position: fixed;
-            bottom: 70px;
+            bottom: 120px;
             left: 50%;
             transform: translateX(-50%);
             font-size: 1em;
@@ -79,14 +79,16 @@
         }
 
         /* Navigation Buttons */
-        .navigation-buttons {
-            position: fixed;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 15px;
-        }
+         .navigation-buttons {
+        position: relative; /* Change from fixed to relative */
+        bottom: auto; /* Remove bottom positioning */
+        margin: 10px 0;
+        text-align: center;
+        display: flex;
+        flex-wrap: wrap; /* Enable wrapping for smaller screens */
+        gap: 15px;
+        justify-content: center; /* Center-align the buttons */
+    }
         button, a.button {
             padding: 10px 20px;
             font-size: 1em;
@@ -141,6 +143,30 @@
                 font-size: 0.95em;
             }
         }
+.share-section {
+        margin: 0px 0; /* Add spacing between navigation and share sections */
+        text-align: center;
+    }
+
+    .share-section h2 {
+        margin-bottom: 15px;
+        font-size: 1.5em;
+    }
+
+    .share-section .button {
+        display: inline-block;
+        margin: 10px;
+        padding: 10px 20px;
+        font-size: 1em;
+        background-color: #007bff;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+    }
+
+    .share-section .button:hover {
+        background-color: #0056b3;
+    }
     </style>
 </head>
 <body>
@@ -185,12 +211,18 @@
     <div class="progress-indicator">
         <span id="progress">1</span> / {{ wrap.content.slides|length }}
     </div>
+    
     <div class="navigation-buttons">
+        <button id="toggle-theme">Toggle Theme</button>
         <button id="prev-slide">Previous</button>
         <button id="next-slide">Next</button>
-        <button id="toggle-theme">Toggle Theme</button>
         <a href="{% url 'home' %}" class="button">Back to Home</a>
     </div>
+    <div class="share-section">
+    <a id="share-twitter" class="button" target="_blank">Share on X (Twitter)</a>
+    <a id="share-linkedin" class="button" target="_blank">Share on LinkedIn</a>
+    <button id="copy-to-clipboard" class="button">Copy Wrapped to Clipboard</button>
+</div>
 
     <script>
         const slides = document.querySelectorAll('.slide');
@@ -280,6 +312,45 @@
                 };
             }
         });
+document.addEventListener('DOMContentLoaded', () => {
+        const wrapTitle = "{{ wrap.title }}";
+        const slides = {{ wrap.content.slides|safe }};
+
+        const topArtistsSlide = slides.find(slide => slide.title === "Your Top Artists");
+        const topSongsSlide = slides.find(slide => slide.title === "Your Top Tracks");
+        const topGenresSlide = slides.find(slide => slide.title === "Your Top Genres");
+
+        const topArtists = topArtistsSlide ? topArtistsSlide.content.join(', ') : 'N/A';
+        const topSongs = topSongsSlide ? topSongsSlide.content.map(track => `${track.name} by ${track.artist}`).join(', ') : 'N/A';
+        const topGenres = topGenresSlide ? topGenresSlide.content.join(', ') : 'N/A';
+
+        const message = `Here is my Wrapped! 🎶\n\nTop Artists:\n${topArtists}\n\nTop Songs:\n${topSongs}\n\nTop Genres:\n${topGenres}`;
+
+        // Twitter Sharing
+        const twitterBaseUrl = "https://twitter.com/intent/tweet";
+        const twitterParams = new URLSearchParams({
+            text: message,
+            hashtags: "SpotifyWrapped,Music",
+        });
+        document.getElementById('share-twitter').href = `${twitterBaseUrl}?${twitterParams.toString()}`;
+
+        // LinkedIn Sharing (Copy-based fallback)
+        const linkedInBaseUrl = "https://www.linkedin.com/sharing/share-offsite/";
+        const linkedInParams = new URLSearchParams({
+            text: message,
+        });
+        document.getElementById('share-linkedin').href = `${linkedInBaseUrl}?${linkedInParams.toString()}`;
+
+        // Copy to Clipboard
+        document.getElementById('copy-to-clipboard').addEventListener('click', () => {
+            navigator.clipboard.writeText(message).then(() => {
+                alert('Your Wrapped summary has been copied to the clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+                alert('Failed to copy your Wrapped summary.');
+            });
+        });
+    });
     </script>
 </body>
 </html>
