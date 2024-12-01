@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -102,7 +101,7 @@
             background-color: #0056b3;
         }
 
-        /* Responsive Design: Mobile */
+        /* Responsive Design */
         @media (max-width: 768px) {
             h1 {
                 font-size: 1.8em;
@@ -125,23 +124,6 @@
                 gap: 10px;
             }
         }
-
-        /* Responsive Design: Tablet */
-        @media (max-width: 1024px) {
-            h1 {
-                font-size: 2em;
-            }
-            .slide h2 {
-                font-size: 1.4em;
-            }
-            .slide ul li {
-                font-size: 1.1em;
-            }
-            button, a.button {
-                padding: 9px 18px;
-                font-size: 0.95em;
-            }
-        }
     </style>
 </head>
 <body>
@@ -150,7 +132,27 @@
         {% for slide in wrap.content.slides %}
             <div class="slide {% if forloop.first %}active{% endif %}">
                 <h2>{{ slide.title }}</h2>
-                {% if slide.content %}
+                {% if slide.title == "Your Top Tracks" %}
+                    <ul>
+                        {% for track in slide.content %}
+                            <li>
+                                <strong>{{ track.name }}</strong> by {{ track.artist }}
+                                {% if track.spotify_id %}
+                                    <iframe
+                                        src="https://open.spotify.com/embed/track/{{ track.spotify_id }}"
+                                        width="300"
+                                        height="80"
+                                        frameborder="0"
+                                        allowtransparency="true"
+                                        allow="encrypted-media">
+                                    </iframe>
+                                {% else %}
+                                    <p>No playback available for this track.</p>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% elif slide.content %}
                     <ul>
                         {% for item in slide.content %}
                             <li>{{ item }}</li>
