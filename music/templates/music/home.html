@@ -1,9 +1,17 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link id="theme-stylesheet" rel="stylesheet" href="{% static 'music/light.css' %}">
+</head>
+<body>
 <div class="navigation">
     <a href="{% url 'settings' %}" class="button">Settings</a>
     <a href="{% url 'logout' %}" class="button">Log Out</a>
     <a href="{% url 'contact_developer' %}" class="button">Contact Developer</a>
 </div>
-
 <h1>Welcome to Your Spotify Wraps</h1>
 <a href="{% url 'generate_wrap' %}" class="button">Generate New Wrap</a>
 
@@ -24,3 +32,36 @@
 <h2>List of Games You Can Play</h2>
 <a href="{% url 'musician_guess' %}" class="button">Guess Your Most Listened To Musician Game</a>
 <a href="{% url 'audio_guess' %}" class="button">Guess Song based on audio Game</a>
+
+<button id="toggle-theme">Toggle Theme</button>
+
+<script>
+   function setTheme(theme) {
+        const themeStylesheet = document.getElementById('theme-stylesheet');
+        themeStylesheet.setAttribute('href',
+            theme === 'dark' ? '{% static 'music/dark.css' %}' :
+            theme === 'light' ? '{% static 'music/light.css' %}' :
+            '{% static 'music/color.css' %}' // Colorful theme
+        );
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        setTheme(currentTheme); // Set the initial theme based on stored value
+
+        const toggleButton = document.getElementById('toggle-theme');
+        toggleButton.textContent = 'Switch Theme'; // Update button text
+
+        toggleButton.onclick = () => {
+            // Retrieve the current theme again
+            const currentTheme = localStorage.getItem('theme') || 'light';
+            const newTheme = currentTheme === 'dark' ? 'light' :
+                             currentTheme === 'light' ? 'colorful' : 'dark'; // Cycle through themes
+            localStorage.setItem('theme', newTheme); // Store new theme
+            setTheme(newTheme); // Apply new theme
+            toggleButton.textContent = 'Switch Theme'; // Update button text
+        };
+    }); 
+</script>
+</body>
+</html>
