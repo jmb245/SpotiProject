@@ -16,5 +16,8 @@ urlpatterns = [
     path('wrap/<int:wrap_id>/delete/', views.delete_wrap, name='delete_wrap'),
     path('generate-holiday-wrap/', views.generate_wrap, {'holiday': True}, name='generate_holiday_wrap'),
     path('contact/', views.contact_developer, name='contact_developer'),
+    path('musician_guess/', views.musician_guess, name='musician_guess'),
+    path('audio_guess/', views.audio_guess, name='audio_guess'),
+    path('check/', views.check_answer, name='check_answer'),
 
 ]

@@ -1,6 +1,8 @@
 # views.py
 
 import logging
+import random
+from django.http import JsonResponse
 import requests
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate
@@ -326,3 +328,78 @@ def contact_developer(request):
         form = ContactForm()
 
     return render(request, 'music/contact.html', {'form': form})
+
+def refresh_token(token_info):
+    token_url = "https://accounts.spotify.com/api/token"
+    payload = {
+        "grant_type": "refresh_token",
+        "refresh_token": token_info['refresh_token'],
+        "client_id": settings.SPOTIFY_CLIENT_ID,
+        "client_secret": settings.SPOTIFY_CLIENT_SECRET,
+    }
+    response = requests.post(token_url, data=payload)
+    return response.json()
+
+def musician_guess(request):
+    token_info = request.session.get('token_info')
+    if not token_info:
+        return redirect('spotify_login')  # Ensure proper redirection
+
+    # Refresh the token if expired
+    if 'expires_in' in token_info and token_info['expires_in'] <= 0:
+        token_info = refresh_token(token_info)
+        request.session['token_info'] = token_info
+
+    headers = {
+        "Authorization": f"Bearer {token_info['access_token']}",
+    }
+    top_artists_url = "https://api.spotify.com/v1/me/top/artists"
+    response = requests.get(top_artists_url, headers=headers, params={"limit": 10, "time_range": "medium_term"})
+
+    if response.status_code == 401:  # Token might have expired
+        return redirect('spotify_login')
+
+    data = response.json()
+    artist_names = [artist['name'] for artist in data['items']]
+
+    if request.method == 'POST':
+        user_guess = request.POST.get('guess').lower()
+        if user_guess in (name.lower() for name in artist_names):
+            message = "Correct! That artist is in your top 10."
+        else:
+            message = "Not quite! Try again."
+        return render(request, 'music/musician_guess.html', {'message': message, 'artists': artist_names})
+
+    return render(request, 'music/musician_guess.html', {'artists': artist_names})
+
+def audio_guess(request):
+    access_token = request.session.get('access_token')
+
+    if not access_token:
+        return redirect('spotify_login')
+
+    # Fetch user's top tracks
+    headers = {"Authorization": f"Bearer {access_token}"}
+    top_tracks_url = "https://api.spotify.com/v1/me/top/tracks?limit=10&time_range=short_term"
+    response = requests.get(top_tracks_url, headers=headers)
+    top_tracks = response.json()
+
+    # Randomly select a song
+    song = random.choice(top_tracks['items'])
+    snippet_url = song.get('preview_url')
+    options = [song['name']] + [random.choice(top_tracks['items'])['name'] for _ in range(3)]
+    random.shuffle(options)
+
+    context = {
+        'snippet_url': snippet_url,
+        'options': options,
+        'answer': song['name'],
+    }
+    return render(request, 'music/audio_guess.html', context)
+
+def check_answer(request):
+    if request.method == 'POST':
+        answer = request.POST.get('answer')
+        user_guess = request.POST.get('guess')
+        correct = answer == user_guess
+        return JsonResponse({'correct': correct})

@@ -13,6 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'your-default-secret-key')
 DEBUG = True
 ALLOWED_HOSTS = []
+STATIC_URL = '/static/'
 
 # Installed apps
 INSTALLED_APPS = [
@@ -118,7 +119,8 @@ SOCIALACCOUNT_AUTO_SIGNUP = False
 # Spotify OAuth settings
 SPOTIFY_CLIENT_ID = os.getenv('SPOTIFY_CLIENT_ID', 'your_client_id_here')
 SPOTIFY_CLIENT_SECRET = os.getenv('SPOTIFY_CLIENT_SECRET', 'your_client_secret_here')
-SPOTIFY_REDIRECT_URI = os.getenv('SPOTIFY_REDIRECT_URI', 'http://127.0.0.1:8000/spotify/callback/')
+SPOTIFY_REDIRECT_URI = os.getenv('SPOTIFY_REDIRECT_URI', 'http://10.0.0.85/spotify/callback/')
+
 
 SOCIALACCOUNT_PROVIDERS = {
     'spotify': {
