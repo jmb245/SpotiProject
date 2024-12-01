@@ -1,0 +1,51 @@
+/* Body styles */
+body {
+    background-color: #426542; /* Light snowy background */
+    color: #ff0000; /* Christmas red for text */
+    font-family: 'Georgia', serif;
+}
+
+/* Button styles */
+button {
+    background-color: #ff0000; /* Red buttons */
+    color: #ffffff; /* White text */
+    border: 2px solid #008000; /* Green border */
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #cc0000; /* Darker red on hover */
+    border-color: #006600; /* Darker green on hover */
+}
+
+/* Links */
+a {
+    color: #ff0000; /* Red links */
+    text-decoration: none;
+}
+
+a:hover {
+    color: #008000; /* Green on hover */
+    text-decoration: underline;
+}
+
+/* Headers */
+h1, h2, h3 {
+    color: #ff0000; /* Red headers */
+}
+
+/* Decorations */
+.header-decor {
+    border-bottom: 3px solid #008000; /* Green underline */
+    padding-bottom: 5px;
+}
+
+/* Christmas sparkle effect */
+.sparkle {
+    background: linear-gradient(to right, #ff0000, #ffffff, #008000); /* Red, white, green gradient */
+    color: transparent;
+    background-clip: text;
+    -webkit-background-clip: text;
+}

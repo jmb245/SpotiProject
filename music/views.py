@@ -14,7 +14,7 @@ from django.urls import reverse
 from .forms import CustomUserCreationForm, CustomAuthenticationForm
 from django.conf import settings
 from .models import Wrap
-from datetime import datetime
+from datetime import datetime, date
 from .forms import ContactForm
 
 logger = logging.getLogger(__name__)
@@ -340,6 +340,7 @@ def refresh_token(token_info):
     response = requests.post(token_url, data=payload)
     return response.json()
 
+@login_required
 def musician_guess(request):
     token_info = request.session.get('token_info')
     if not token_info:
@@ -372,6 +373,7 @@ def musician_guess(request):
 
     return render(request, 'music/musician_guess.html', {'artists': artist_names})
 
+@login_required
 def audio_guess(request):
     access_token = request.session.get('access_token')
 

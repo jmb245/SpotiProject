@@ -1,0 +1,41 @@
+/* Body styles */
+body {
+    background-color: #1a1a1a; /* Dark background for a spooky effect */
+    color: #ffa500; /* Bright orange text */
+    font-family: 'Arial', sans-serif;
+}
+
+/* Button styles */
+button {
+    background-color: #ffa500; /* Orange buttons */
+    color: #1a1a1a; /* Dark text */
+    border: 2px solid #ffa500;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #e68a00; /* Darker orange on hover */
+    color: #fff; /* White text */
+}
+
+/* Links */
+a {
+    color: #ffa500; /* Orange links */
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Headers */
+h1, h2, h3 {
+    color: #ffa500;
+}
+
+/* Additional spooky effects */
+.box-shadow {
+    box-shadow: 0 0 10px 5px rgba(255, 165, 0, 0.8); /* Orange glowing effect */
+}

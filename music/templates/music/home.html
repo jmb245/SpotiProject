@@ -11,6 +11,7 @@
     <a href="{% url 'settings' %}" class="button">Settings</a>
     <a href="{% url 'logout' %}" class="button">Log Out</a>
     <a href="{% url 'contact_developer' %}" class="button">Contact Developer</a>
+    <button id="toggle-theme">Toggle Theme</button>
 </div>
 <h1>Welcome to Your Spotify Wraps</h1>
 <a href="{% url 'generate_wrap' %}" class="button">Generate New Wrap</a>
@@ -33,35 +34,68 @@
 <a href="{% url 'musician_guess' %}" class="button">Guess Your Most Listened To Musician Game</a>
 <a href="{% url 'audio_guess' %}" class="button">Guess Song based on audio Game</a>
 
-<button id="toggle-theme">Toggle Theme</button>
 
 <script>
-   function setTheme(theme) {
-        const themeStylesheet = document.getElementById('theme-stylesheet');
-        themeStylesheet.setAttribute('href',
-            theme === 'dark' ? '{% static 'music/dark.css' %}' :
-            theme === 'light' ? '{% static 'music/light.css' %}' :
-            '{% static 'music/color.css' %}' // Colorful theme
-        );
+  function setTheme(theme) {
+    const themeStylesheet = document.getElementById('theme-stylesheet');
+    themeStylesheet.setAttribute('href', 
+        theme === 'dark' ? '{% static "music/dark.css" %}' :
+        theme === 'light' ? '{% static "music/light.css" %}' :
+        theme === 'colorful' ? '{% static "music/color.css" %}' :
+        theme === 'orange' ? '{% static "music/orange.css" %}' :
+        theme === 'red' ? '{% static "music/red.css" %}' :
+        '{% static "music/light.css" %}'
+    );
+}
+
+function getQueryParam(param) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(param);
+}
+
+function checkDateForTheme() {
+    // Check for ?date=MM-DD in the URL
+    const simulatedDate = getQueryParam('date');
+    let dateKey;
+
+    if (simulatedDate) {
+        dateKey = simulatedDate; // Use the simulated date from the URL
+    } else {
+        const today = new Date();
+        dateKey = `${today.getMonth() + 1}-${today.getDate()}`; // Use today's date
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
+    if (dateKey === '10-31') {
+        setTheme('orange'); // Halloween
+        return true;
+    } else if (dateKey === '12-25') {
+        setTheme('red'); // Christmas
+        return true;
+    }
+
+    return false; // No special theme applied
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const specialThemeApplied = checkDateForTheme();
+    if (!specialThemeApplied) {
         const currentTheme = localStorage.getItem('theme') || 'light';
-        setTheme(currentTheme); // Set the initial theme based on stored value
+        setTheme(currentTheme);
 
         const toggleButton = document.getElementById('toggle-theme');
-        toggleButton.textContent = 'Switch Theme'; // Update button text
+        if (toggleButton) {
+            toggleButton.onclick = () => {
+                const currentTheme = localStorage.getItem('theme') || 'light';
+                const newTheme = currentTheme === 'dark' ? 'light' :
+                                 currentTheme === 'light' ? 'colorful' :
+                                 currentTheme === 'colorful' ? 'dark' : 'light';
+                localStorage.setItem('theme', newTheme);
+                setTheme(newTheme);
+            };
+        }
+    }
+});
 
-        toggleButton.onclick = () => {
-            // Retrieve the current theme again
-            const currentTheme = localStorage.getItem('theme') || 'light';
-            const newTheme = currentTheme === 'dark' ? 'light' :
-                             currentTheme === 'light' ? 'colorful' : 'dark'; // Cycle through themes
-            localStorage.setItem('theme', newTheme); // Store new theme
-            setTheme(newTheme); // Apply new theme
-            toggleButton.textContent = 'Switch Theme'; // Update button text
-        };
-    }); 
 </script>
 </body>
 </html>
