@@ -119,6 +119,42 @@ def spotify_callback(request):
     messages.success(request, 'Spotify successfully linked!')
     return redirect('home')
 
+def contact_developers(request):
+    if request.method == 'POST':
+        # Process feedback form
+        name = request.POST.get('name')
+        email = request.POST.get('email')
+        message = request.POST.get('message')
+        if name and email and message:
+            try:
+                # Send email or process feedback
+                send_mail(
+                    subject=f"Feedback from {name}",
+                    message=message,
+                    from_email=email,
+                    recipient_list=['team@developers.com'],  # Replace with your team's email
+                )
+                messages.success(request, "Thank you for your feedback!")
+            except Exception as e:
+                messages.error(request, f"An error occurred: {str(e)}")
+        else:
+            messages.error(request, "Please fill out all fields.")
+    # Example team data for template
+    developers = [
+        {"name": "Jad Matthew Bardawil", "role": "Add role",
+         "bio": "Add bio.", "email": "Add email"},
+        {"name": "Benjamin Yohros", "role": "Add role",
+         "bio": "Add bio.", "email": "Add email"},
+        {"name": "Heeyoon Shin", "role": "Add role",
+         "bio": "Add bio.", "email": "Add email"},
+        {"name": "Natalie Burstein", "role": "Add role",
+         "bio": "Add bio.", "email": "Add email"},
+        {"name": "Emily Prieto", "role": "Add role",
+         "bio": "Add bio.", "email": "Add email"},
+    ]
+    return render(request, 'music/contact_developers.html', {"developers": developers})
+
+
 @login_required
 def check_spotify_token(request):
     user = request.user
@@ -206,20 +242,18 @@ def generate_wrap(request):
 
     # Check if today is a holiday
     holidays = {
-        '10-31': 'Halloween',  # October 31
-        '12-25': 'Christmas',  # December 25
+        '10-31': 'Halloween',
+        '12-25': 'Christmas',
     }
 
-    # Allow overriding the date for testing
-    override_date = request.GET.get('override_date')  # Expect format 'MM-DD'
+    # Override date for testing
+    override_date = request.GET.get('override_date')
     today = datetime.strptime(override_date, '%m-%d').date() if override_date else datetime.now().date()
 
     holiday_name = holidays.get(today.strftime('%m-%d'), None)
-
-    # Detect if generating a holiday wrap
     is_holiday_wrap = 'holiday' in request.GET or bool(holiday_name)
 
-    # Fetch Spotify data using helper function
+    # Fetch Spotify data
     top_artists_data = fetch_spotify_data("https://api.spotify.com/v1/me/top/artists", user, params={"limit": 5})
     top_tracks_data = fetch_spotify_data("https://api.spotify.com/v1/me/top/tracks", user, params={"limit": 5})
     recent_tracks_data = fetch_spotify_data("https://api.spotify.com/v1/me/player/recently-played", user,
@@ -228,40 +262,46 @@ def generate_wrap(request):
 
     # Parse data for slides
     slides = [
-        {"title": "Welcome to Your Spotify Wrap", "content": ['Use the buttons on the bottom to navigate!']},
-        {"title": "Are You Ready?", "content": ['Get ready to see all what you have been listening to on Spotify.']},
+        {"title": "Welcome to Your Spotify Wrap", "content": ['Use the buttons below to navigate!']},
+        {"title": "Are You Ready?", "content": ['Get ready to explore your Spotify activity!']},
         {"title": "Your Top Artists", "content": [artist['name'] for artist in top_artists_data.get('items', [])]},
         {"title": "Your Top Genres", "content": list(
             set(genre for artist in top_artists_data.get('items', []) for genre in artist.get('genres', [])))},
         {"title": "Your Top Albums",
          "content": list({track['album']['name'] for track in top_tracks_data.get('items', [])})},
-        {"title": "Your Top Tracks", "content": [f"{track['name']} by {track['artists'][0]['name']}" for track in
-                                                 top_tracks_data.get('items', [])]},
+        {"title": "Your Top Tracks", "content": [
+            {
+                "name": track['name'],
+                "artist": track['artists'][0]['name'],
+                "spotify_id": track['id'],
+            } for track in top_tracks_data.get('items', [])
+        ]},
         {"title": "Your Recently Played Tracks",
          "content": [f"{item['track']['name']} by {item['track']['artists'][0]['name']}" for item in
                      recent_tracks_data.get('items', [])]},
         {"title": "Your Playlists",
          "content": [f"{playlist['name']} - {playlist['tracks']['total']} tracks" for playlist in
                      playlists_data.get('items', [])]},
-        {"title": "Thank You for Viewing", "content": ['We hope you enjoyed seeing what you have listened to.']},
+        {"title": "Thank You for Viewing", "content": ['We hope you enjoyed your Spotify wrap!']},
     ]
 
-    # Add holiday-specific slides if generating a holiday wrap
+    # Add holiday greeting
     if is_holiday_wrap:
-        holiday_greeting = f"Happy {holiday_name or 'Holiday'}!"  # Use detected holiday or default
+        holiday_greeting = f"Happy {holiday_name or 'Holiday'}!"
         slides.insert(0, {"title": holiday_greeting, "content": ["Enjoy your festive Spotify wrap!"]})
         slides.append({"title": "This Holiday Has Been Wrapped!", "content": ["🎄 Spread the joy with festive music! 🎃"]})
 
-    # Save the wrap in the database with appropriate type
+    # Save the wrap
     wrap = Wrap.objects.create(
         user=user,
         title=f"{'Holiday' if is_holiday_wrap else 'Spotify'} Wrap",
         content={"slides": slides},
         wrap_type='holiday' if is_holiday_wrap else 'regular'
     )
-    logger.info(f"{'Holiday' if is_holiday_wrap else 'Regular'} wrap generated successfully for user {user.username}")
     messages.success(request, f"New {'Holiday' if is_holiday_wrap else ''} Wrap generated successfully!")
     return redirect('home')
+
+
 
 @login_required
 def delete_wrap(request, wrap_id):
