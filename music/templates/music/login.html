@@ -1,38 +1,125 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css?family=Lexend&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;700&display=swap" rel="stylesheet">
     <link id="theme-stylesheet" href="{% static 'music/light.css' %}" rel="stylesheet">
-    <link href="{% static 'music/main.css' %}" rel="stylesheet">
     <title>Log In</title>
+    <style>
+        body {
+            font-family: 'Lexend', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .login-container {
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        span {
+            display: block;
+            margin-bottom: 2rem;
+            font-size: 1.2rem;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid currentColor;
+            border-radius: 30px;
+            background-color: transparent;
+            color: inherit;
+            text-align: center;
+            font-size: 1rem;
+        }
+
+        input::placeholder {
+            color: currentColor;
+        }
+
+        button {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 1rem;
+            color: white;
+            background-color: #1DB954;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #159442;
+        }
+
+        .signup-prompt {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .signup-prompt a {
+            color: #1DB954;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .signup-prompt a:hover {
+            text-decoration: underline;
+        }
+
+        .theme-toggle-button {
+            margin-top: 2rem;
+            font-size: 0.9rem;
+            background: none;
+            color: inherit;
+            border: 1px solid currentColor;
+            border-radius: 30px;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+        }
+
+        .theme-toggle-button:hover {
+            background: currentColor;
+            color: inherit;
+        }
+    </style>
 </head>
 <body>
-    <div class="v1_8">
-        <h1 class="v1_15">Welcome to Spotify Wrapped</h1>
-        <span class="v1_21">Log in to view your listening habits.</span>
+    <div class="login-container">
+        <h1>Welcome to Spotify Wrapped</h1>
+        <span>Log in to view your listening habits.</span>
 
-        <form method="post" class="login-form">
+        <form method="post">
             {% csrf_token %}
-            <div class="v55_19">
-                <label for="id_username" class="v55_20">Username</label>
-                {{ form.username }}
-            </div>
-            <div class="v55_25">
-                <label for="id_password" class="v55_26">Password</label>
-                {{ form.password }}
-            </div>
-            <button type="submit" class="v1_13">Log In</button>
+            {{ form.username }}
+            {{ form.password }}
+            <button type="submit">Log In</button>
         </form>
-        
+
         <p class="signup-prompt">
-            <span>No account?</span>
-            <a href="{% url 'signup' %}" class="v55_33">Sign up here</a>
+            No account? <a href="{% url 'signup' %}">Sign up here</a>
         </p>
-        
+
         <button id="toggle-theme" class="theme-toggle-button">Toggle Theme</button>
     </div>
 
@@ -45,7 +132,6 @@
                 theme === 'colorful' ? '{% static "music/color.css" %}' :
                 '{% static "music/light.css" %}' // Fallback
             );
-            console.log("The theme has been changed!");
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -53,8 +139,6 @@
             setTheme(currentTheme);
 
             const toggleButton = document.getElementById('toggle-theme');
-            toggleButton.textContent = 'Switch Theme';
-
             toggleButton.onclick = () => {
                 const currentTheme = localStorage.getItem('theme') || 'light';
                 const newTheme = currentTheme === 'dark' ? 'light' :
@@ -62,10 +146,8 @@
                                  currentTheme === 'colorful' ? 'dark' : 'light';
                 localStorage.setItem('theme', newTheme);
                 setTheme(newTheme);
-                toggleButton.textContent = 'Switch Theme';
             };
         });
     </script>
 </body>
 </html>
-
