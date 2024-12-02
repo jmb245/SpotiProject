@@ -1,90 +1,176 @@
-{% load static i18n %}
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
-<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;700&display=swap" rel="stylesheet">
+    <link id="theme-stylesheet" rel="stylesheet" href="{% static 'music/light.css' %}">
+    <title>Contact The Developers</title>
+    <style>
+        body {
+            font-family: 'Lexend', sans-serif;
+            margin: 0;
+            padding: 0;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
+        h1 {
+            font-size: 2.5rem;
+            margin: 2rem 0 1rem;
+        }
 
-{% block content %}
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link id="theme-stylesheet" rel="stylesheet" href="{% static 'music/light.css' %}">
-        <title>{% trans "Contact the Developers" %}</title>
-    </head>
+        p {
+            font-size: 1.2rem;
+            margin: 0 0 1.5rem;
+            text-align: center;
+        }
 
-    <body>
-        <h1>{% trans "Contact the Developers" %}</h1>
-        <button id="toggle-theme">{% trans "Toggle Theme" %}</button>
-        <p>{% trans "If you have any questions or feedback, feel free to send a message." %}</p>
+        form {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        label {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            font-size: 1rem;
+            color: inherit;
+            background-color: transparent;
+        }
+
+        textarea {
+            resize: none;
+            height: 150px;
+        }
+
+        button {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 1.2rem;
+            color: white;
+            background-color: #1DB954; /* Button color */
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        button:hover {
+            background-color: #159442; /* Darker purple for hover */
+        }
+
+        #toggle-theme {
+            margin-top: 2rem;
+            padding: 0.5rem 1rem;
+            background-color: transparent;
+            color: inherit;
+            border: 1px solid currentColor; /* Match text color */
+            border-radius: 30px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        #toggle-theme:hover {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .container {
+            text-align: center;
+            padding: 2rem 1rem;
+            width: 100%;
+            max-width: 800px;
+            margin: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Contact the Developers</h1>
+        <p>If you have any questions or feedback, feel free to send a message.</p>
+
         <form method="post">
             {% csrf_token %}
             {{ form.as_p }}
-            <button type="submit" class="button">{% trans "Send Message" %}</button>
+            <button type="submit">Send Message</button>
         </form>
-        <script>
-   function setTheme(theme) {
-    const themeStylesheet = document.getElementById('theme-stylesheet');
-    themeStylesheet.setAttribute('href',
-        theme === 'dark' ? '{% static "music/dark.css" %}' :
-        theme === 'light' ? '{% static "music/light.css" %}' :
-        theme === 'colorful' ? '{% static "music/color.css" %}' :
-        theme === 'orange' ? '{% static "music/orange.css" %}' :
-        theme === 'red' ? '{% static "music/red.css" %}' :
-        '{% static "music/light.css" %}'
-    );
-}
 
-function getQueryParam(param) {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get(param);
-}
+        <button id="toggle-theme">Toggle Theme</button>
+    </div>
 
-function checkDateForTheme() {
-    let dateKey;
-
-    // Check for a URL-specified date (e.g., ?date=MM-DD)
-    const simulatedDate = getQueryParam('date');
-    if (simulatedDate) {
-        dateKey = simulatedDate; // Use the date from the URL
-    } else {
-        // Use the real current date
-        const today = new Date();
-        dateKey = `${today.getMonth() + 1}-${today.getDate()}`;
-    }
-
-    // Apply themes based on the date
-    if (dateKey === '10-31') {
-        setTheme('orange'); // Halloween
-        return true;
-    } else if (dateKey === '12-25') {
-        setTheme('red'); // Christmas
-        return true;
-    }
-
-    return false; // No holiday theme applied
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    const specialThemeApplied = checkDateForTheme();
-    if (!specialThemeApplied) {
-        const currentTheme = localStorage.getItem('theme') || 'light';
-        setTheme(currentTheme);
-
-        const toggleButton = document.getElementById('toggle-theme');
-        if (toggleButton) {
-            toggleButton.onclick = () => {
-                const currentTheme = localStorage.getItem('theme') || 'light';
-                const newTheme = currentTheme === 'dark' ? 'light' :
-                                 currentTheme === 'light' ? 'colorful' :
-                                 currentTheme === 'colorful' ? 'dark' : 'light';
-                localStorage.setItem('theme', newTheme);
-                setTheme(newTheme);
-            };
+    <script>
+        function setTheme(theme) {
+            const themeStylesheet = document.getElementById('theme-stylesheet');
+            themeStylesheet.setAttribute('href',
+                theme === 'dark' ? '{% static "music/dark.css" %}' :
+                theme === 'light' ? '{% static "music/light.css" %}' :
+                theme === 'colorful' ? '{% static "music/color.css" %}' :
+                theme === 'orange' ? '{% static "music/orange.css" %}' :
+                theme === 'red' ? '{% static "music/red.css" %}' :
+                '{% static "music/light.css" %}'
+            );
         }
-    }
-});
-    </script>
-    </body>
-{% endblock %}
 
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        function checkDateForTheme() {
+            let dateKey;
+
+            const simulatedDate = getQueryParam('date');
+            if (simulatedDate) {
+                dateKey = simulatedDate;
+            } else {
+                const today = new Date();
+                dateKey = `${today.getMonth() + 1}-${today.getDate()}`;
+            }
+
+            if (dateKey === '10-31') {
+                setTheme('orange'); // Halloween
+                return true;
+            } else if (dateKey === '12-25') {
+                setTheme('red'); // Christmas
+                return true;
+            }
+
+            return false; // No holiday theme applied
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const specialThemeApplied = checkDateForTheme();
+            if (!specialThemeApplied) {
+                const currentTheme = localStorage.getItem('theme') || 'light';
+                setTheme(currentTheme);
+
+                const toggleButton = document.getElementById('toggle-theme');
+                if (toggleButton) {
+                    toggleButton.onclick = () => {
+                        const currentTheme = localStorage.getItem('theme') || 'light';
+                        const newTheme = currentTheme === 'dark' ? 'light' :
+                                         currentTheme === 'light' ? 'colorful' :
+                                         currentTheme === 'colorful' ? 'dark' : 'light';
+                        localStorage.setItem('theme', newTheme);
+                        setTheme(newTheme);
+                    };
+                }
+            }
+        });
+    </script>
+</body>
 </html>
