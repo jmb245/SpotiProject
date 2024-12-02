@@ -1,4 +1,4 @@
-{% load static %}
+{% load static i18n %}
 <!DOCTYPE html>
 <html lang="en">
 <html>
@@ -9,17 +9,17 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link id="theme-stylesheet" rel="stylesheet" href="{% static 'music/light.css' %}">
-        <title>Contact The Developer</title>
+        <title>{% trans "Contact the Developers" %}</title>
     </head>
 
     <body>
-        <h1>Contact the Developers</h1>
-                <button id="toggle-theme">Toggle Theme</button>
-        <p>If you have any questions or feedback, feel free to send a message.</p>
+        <h1>{% trans "Contact the Developers" %}</h1>
+        <button id="toggle-theme">{% trans "Toggle Theme" %}</button>
+        <p>{% trans "If you have any questions or feedback, feel free to send a message." %}</p>
         <form method="post">
             {% csrf_token %}
             {{ form.as_p }}
-            <button type="submit" class="button">Send Message</button>
+            <button type="submit" class="button">{% trans "Send Message" %}</button>
         </form>
         <script>
    function setTheme(theme) {
