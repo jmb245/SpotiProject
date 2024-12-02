@@ -20,6 +20,7 @@ from django.middleware.locale import LocaleMiddleware
 from django.utils.translation import activate
 from django.http import HttpResponseRedirect
 from django.utils.translation import gettext as _
+from django.utils.translation import gettext as _, get_language
 
 logger = logging.getLogger(__name__)
 
@@ -319,6 +320,35 @@ def delete_wrap(request, wrap_id):
 @login_required
 def view_wrap(request, wrap_id):
     wrap = get_object_or_404(Wrap, id=wrap_id, user=request.user)
+
+    translated_slides = []
+
+    # Dynamically translate slides during rendering
+    for slide in wrap.content['slides']:
+        translated_slide = {
+            "title": _(slide['title']),
+            "content": []
+        }
+        # Handle different content types
+        if isinstance(slide['content'], list):
+            for item in slide['content']:
+                if isinstance(item, dict):  # Handle structured data like top tracks
+                    translated_item = {
+                        "name": _(item.get('name', '')),
+                        "artist": _(item.get('artist', '')),
+                        "spotify_id": item.get('spotify_id', '')  # Spotify ID remains the same
+                    }
+                    translated_slide['content'].append(translated_item)
+                else:
+                    translated_slide['content'].append(_(item))
+        else:
+            translated_slide['content'].append(_(slide['content']))
+
+        translated_slides.append(translated_slide)
+
+    # Replace slides with translated content
+    wrap.content['slides'] = translated_slides
+
     return render(request, 'music/view_wrap.html', {'wrap': wrap})
 
 def contact_developer(request):
