@@ -1,51 +1,174 @@
-<!-- music/templates/music/signup.html -->
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;700&display=swap" rel="stylesheet">
     <link id="theme-stylesheet" rel="stylesheet" href="{% static 'music/light.css' %}">
+    <title>Sign Up</title>
+    <style>
+        body {
+            font-family: 'Lexend', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Aligns content towards the top */
+            height: 100vh;
+            margin: 0;
+            padding: 2rem 0; /* Added padding to ensure visibility of title and spacing */
+        }
+
+        .signup-container {
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+            padding: 2rem 0; /* Added consistent padding to top and bottom */
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 1.5rem; /* Add margin for spacing below the title */
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        label {
+            font-size: 1rem;
+            color: inherit; /* Adapts to theme color */
+            display: block;
+            text-align: left;
+            margin-bottom: 0.5rem;
+        }
+
+        input[type="text"], input[type="password"], input[type="email"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid currentColor; /* Matches theme color */
+            border-radius: 30px;
+            background-color: transparent; /* Adapts to theme background */
+            color: inherit; /* Matches text color of the theme */
+            text-align: center;
+            font-size: 1rem;
+        }
+
+        input::placeholder {
+            color: currentColor; /* Matches text color in the theme */
+        }
+
+        .instructions {
+            font-size: 0.9rem;
+            text-align: left;
+            margin: -0.5rem 0 1rem;
+            color: inherit;
+        }
+
+        button {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 1.2rem;
+            color: white;
+            background-color: #1DB954; /* Spotify green */
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #159442; /* Darker green for hover */
+        }
+
+        p {
+            margin-top: 1.5rem;
+            font-size: 1rem;
+        }
+
+        a {
+            color: #1DB954;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .theme-toggle-button {
+            margin-top: 2rem;
+            font-size: 0.9rem;
+            background: none;
+            color: currentColor; /* Keep text color consistent */
+            border: 1px solid currentColor; /* Matches the theme color */
+            border-radius: 30px;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+        }
+
+        .theme-toggle-button:hover {
+            background: transparent; /* Prevent background change for readability */
+            color: currentColor; /* Keep text color readable */
+        }
+    </style>
 </head>
 <body>
-<!-- music/templates/music/signup.html -->
-<h1>Sign Up</h1>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Sign Up</button>
-</form>
-<p>Already have an account? <a href="{% url 'login' %}">Log in here</a></p>
-<button id="toggle-theme">Toggle Theme</button>
-<script>
-    function setTheme(theme) {
+    <div class="signup-container">
+        <h1>Sign Up</h1>
+
+        <form method="post">
+            {% csrf_token %}
+            {{ form.username.label_tag }}
+            {{ form.username }}
+            <p class="instructions">{{ form.username.help_text }}</p>
+
+            {{ form.email.label_tag }}
+            {{ form.email }}
+            <p class="instructions">{{ form.email.help_text }}</p>
+
+            {{ form.password1.label_tag }}
+            {{ form.password1 }}
+            <p class="instructions">Your password must contain at least 8 characters and cannot be too common.</p>
+
+            {{ form.password2.label_tag }}
+            {{ form.password2 }}
+            <p class="instructions">{{ form.password2.help_text }}</p>
+
+            <button type="submit">Sign Up</button>
+        </form>
+
+        <p>Already have an account? <a href="{% url 'login' %}">Log in here</a></p>
+
+        <button id="toggle-theme" class="theme-toggle-button">Switch Theme</button>
+    </div>
+
+    <script>
+        function setTheme(theme) {
             const themeStylesheet = document.getElementById('theme-stylesheet');
             themeStylesheet.setAttribute('href',
-                theme === 'dark' ? '{% static 'music/dark.css' %}' :
-                theme === 'light' ? '{% static 'music/light.css' %}' :
-                '{% static 'music/color.css' %}' // Colorful theme
+                theme === 'dark' ? '{% static "music/dark.css" %}' :
+                theme === 'light' ? '{% static "music/light.css" %}' :
+                theme === 'colorful' ? '{% static "music/color.css" %}' :
+                '{% static "music/light.css" %}' // Default fallback
             );
-            console.log("The theme has been changed!")
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             const currentTheme = localStorage.getItem('theme') || 'light';
-            setTheme(currentTheme); // Set the initial theme based on stored value
+            setTheme(currentTheme);
 
             const toggleButton = document.getElementById('toggle-theme');
-            toggleButton.textContent = 'Switch Theme'; // Update button text
-
             toggleButton.onclick = () => {
-                // Retrieve the current theme again
                 const currentTheme = localStorage.getItem('theme') || 'light';
-                const newTheme = currentTheme === 'dark' ? 'light' :
-                                 currentTheme === 'light' ? 'colorful' : 'dark'; // Cycle through themes
-                localStorage.setItem('theme', newTheme); // Store new theme
-                setTheme(newTheme); // Apply new theme
-                toggleButton.textContent = 'Switch Theme'; // Update button text
+                const newTheme = currentTheme === 'light' ? 'colorful' :
+                                 currentTheme === 'colorful' ? 'dark' : 'light';
+                localStorage.setItem('theme', newTheme);
+                setTheme(newTheme);
             };
         });
-</script>
+    </script>
 </body>
 </html>
