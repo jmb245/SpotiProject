@@ -1,115 +1,131 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;700&display=swap" rel="stylesheet">
+    <title>Contact the Developers</title>
+
+    <!-- Theme stylesheets, default to light theme -->
     <link id="theme-stylesheet" rel="stylesheet" href="{% static 'music/light.css' %}">
-    <title>Contact The Developers</title>
+
     <style>
-        body {
-            font-family: 'Lexend', sans-serif;
-            margin: 0;
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
             padding: 0;
-            position: relative;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            border: 0;
+        }
+
+        .contact-section {
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
+            padding: 110px 80px;
+            font: 700 24px/1 Lexend, sans-serif;
+            transition: background-color 0.3s ease;
         }
 
-        h1 {
-            font-size: 2.5rem;
-            margin: 2rem 0 1rem;
-        }
-
-        p {
-            font-size: 1.2rem;
-            margin: 0 0 1.5rem;
-            text-align: center;
-        }
-
-        form {
-            width: 100%;
-            max-width: 500px;
+        .contact-container {
             display: flex;
             flex-direction: column;
-            gap: 1rem;
-        }
-
-        label {
-            font-size: 1rem;
-            margin-bottom: 0.5rem;
-        }
-
-        input, textarea {
+            align-items: center;
             width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            font-size: 1rem;
-            color: inherit;
-            background-color: transparent;
+            max-width: 756px;
+            text-align: center;
         }
 
-        textarea {
+        .contact-heading {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .contact-description {
+            font-size: 18px;
+            margin-bottom: 40px;
+        }
+
+        .message-input {
+            width: 100%;
+            border-radius: 20px;
+            background-color: #fff;
+            padding: 20px 10px;
+            font-size: 20px;
+            color: #1ed760;
+            font-weight: 400;
+            border: 1px solid #000;
             resize: none;
-            height: 150px;
         }
 
-        button {
+        .submit-button {
             width: 100%;
-            padding: 0.75rem;
-            font-size: 1.2rem;
-            color: white;
-            background-color: #1DB954; /* Button color */
+            border-radius: 20px;
+            background: #1ed760;
+            margin-top: 16px;
+            min-height: 51px;
+            color: #fff;
+            padding: 14px 10px;
             border: none;
-            border-radius: 30px;
-            cursor: pointer;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        button:hover {
-            background-color: #159442; /* Darker purple for hover */
-        }
-
-        #toggle-theme {
-            margin-top: 2rem;
-            padding: 0.5rem 1rem;
-            background-color: transparent;
-            color: inherit;
-            border: 1px solid currentColor; /* Match text color */
-            border-radius: 30px;
-            font-size: 1rem;
             cursor: pointer;
         }
 
-        #toggle-theme:hover {
-            background-color: rgba(0, 0, 0, 0.1);
+        .submit-button:hover {
+            background: #159442;
         }
 
-        .container {
-            text-align: center;
-            padding: 2rem 1rem;
-            width: 100%;
-            max-width: 800px;
-            margin: auto;
+        .theme-toggle {
+            margin-top: 20px;
+            border-radius: 30px;
+            background-color: #fff;
+            padding: 12px 35px;
+            border: 1px solid #000;
+            cursor: pointer;
+        }
+
+        @media (max-width: 991px) {
+            .contact-section {
+                padding: 20px;
+            }
+
+            .contact-heading {
+                font-size: 40px;
+            }
+
+            .contact-description {
+                font-size: 16px;
+            }
+
+            .submit-button {
+                margin-top: 20px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Contact the Developers</h1>
-        <p>If you have any questions or feedback, feel free to send a message.</p>
-
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit">Send Message</button>
-        </form>
-
-        <button id="toggle-theme">Toggle Theme</button>
+    <div class="contact-section">
+        <div class="contact-container">
+            <h1 class="contact-heading">Contact the Developers</h1>
+            <p class="contact-description">
+                If you have any questions or feedback, feel free to send a message!
+            </p>
+            <form method="post">
+                {% csrf_token %}
+                <label for="messageInput" class="visually-hidden">Message</label>
+                <textarea
+                    id="messageInput"
+                    class="message-input"
+                    name="message"
+                    aria-label="Message"
+                    rows="4"
+                ></textarea>
+                <button type="submit" class="submit-button">Send Message</button>
+            </form>
+            <button class="theme-toggle" type="button" aria-label="Switch Theme">Switch Theme</button>
+        </div>
     </div>
 
     <script>
@@ -120,55 +136,46 @@
                 theme === 'light' ? '{% static "music/light.css" %}' :
                 theme === 'colorful' ? '{% static "music/color.css" %}' :
                 theme === 'orange' ? '{% static "music/orange.css" %}' :
-                theme === 'red' ? '{% static "music/red.css" %}' :
-                '{% static "music/light.css" %}'
+                '{% static "music/light.css" %}' // Default to light theme
             );
-        }
 
-        function getQueryParam(param) {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get(param);
-        }
-
-        function checkDateForTheme() {
-            let dateKey;
-
-            const simulatedDate = getQueryParam('date');
-            if (simulatedDate) {
-                dateKey = simulatedDate;
-            } else {
-                const today = new Date();
-                dateKey = `${today.getMonth() + 1}-${today.getDate()}`;
+            // Change the background color based on theme
+            const contactSection = document.querySelector('.contact-section');
+            if (theme === 'dark') {
+                contactSection.style.backgroundColor = '#2c2c2c';
+            } else if (theme === 'light') {
+                contactSection.style.backgroundColor = '#f4f4f4';
+            } else if (theme === 'colorful') {
+                contactSection.style.backgroundColor = '#f2a7f6';
+            } else if (theme === 'orange') {
+                contactSection.style.backgroundColor = '#ff6347';
             }
-
-            if (dateKey === '10-31') {
-                setTheme('orange'); // Halloween
-                return true;
-            } else if (dateKey === '12-25') {
-                setTheme('red'); // Christmas
-                return true;
-            }
-
-            return false; // No holiday theme applied
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            const specialThemeApplied = checkDateForTheme();
-            if (!specialThemeApplied) {
+            const toggleButton = document.querySelector('.theme-toggle');
+            if (toggleButton) {
                 const currentTheme = localStorage.getItem('theme') || 'light';
                 setTheme(currentTheme);
+                
+                toggleButton.textContent = currentTheme === 'light' ? 'Switch to Dark Mode' :
+                                           currentTheme === 'dark' ? 'Switch to Colorful' :
+                                           currentTheme === 'colorful' ? 'Switch to Orange' : 
+                                           'Switch to Light Mode';
 
-                const toggleButton = document.getElementById('toggle-theme');
-                if (toggleButton) {
-                    toggleButton.onclick = () => {
-                        const currentTheme = localStorage.getItem('theme') || 'light';
-                        const newTheme = currentTheme === 'dark' ? 'light' :
-                                         currentTheme === 'light' ? 'colorful' :
-                                         currentTheme === 'colorful' ? 'dark' : 'light';
-                        localStorage.setItem('theme', newTheme);
-                        setTheme(newTheme);
-                    };
-                }
+                toggleButton.onclick = () => {
+                    const currentTheme = localStorage.getItem('theme') || 'light';
+                    const newTheme = currentTheme === 'dark' ? 'light' :
+                                     currentTheme === 'light' ? 'colorful' :
+                                     currentTheme === 'colorful' ? 'orange' : 'dark';
+                    localStorage.setItem('theme', newTheme);
+                    setTheme(newTheme);
+
+                    toggleButton.textContent = newTheme === 'light' ? 'Switch to Dark Mode' :
+                                               newTheme === 'dark' ? 'Switch to Colorful' :
+                                               newTheme === 'colorful' ? 'Switch to Orange' : 
+                                               'Switch to Light Mode';
+                };
             }
         });
     </script>
