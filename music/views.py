@@ -16,6 +16,10 @@ from django.conf import settings
 from .models import Wrap
 from datetime import datetime, date
 from .forms import ContactForm
+from django.middleware.locale import LocaleMiddleware
+from django.utils.translation import activate
+from django.http import HttpResponseRedirect
+from django.utils.translation import gettext as _
 
 logger = logging.getLogger(__name__)
 
@@ -233,20 +237,21 @@ def fetch_spotify_data(url, user, params=None):
 @login_required
 def home(request):
     wraps = Wrap.objects.filter(user=request.user).order_by('-created_at')
-    return render(request, 'music/home.html', {'wraps': wraps})
+    title = _("Welcome to Your Spotify Wraps")
+    return render(request, 'music/home.html', {'wraps': wraps, 'title': title})
 
 @login_required
 def generate_wrap(request):
     user = request.user
     logger.info(f"Generating a new wrap for user: {user.username}")
 
-    # Check if today is a holiday
+    # Define holidays
     holidays = {
-        '10-31': 'Halloween',
-        '12-25': 'Christmas',
+        '10-31': _('Halloween'),
+        '12-25': _('Christmas'),
     }
 
-    # Override date for testing
+    # Determine today's date or use an override
     override_date = request.GET.get('override_date')
     today = datetime.strptime(override_date, '%m-%d').date() if override_date else datetime.now().date()
 
@@ -260,47 +265,48 @@ def generate_wrap(request):
                                             params={"limit": 5})
     playlists_data = fetch_spotify_data("https://api.spotify.com/v1/me/playlists", user, params={"limit": 5})
 
-    # Parse data for slides
+    # Build slides with translatable content
     slides = [
-        {"title": "Welcome to Your Spotify Wrap", "content": ['Use the buttons below to navigate!']},
-        {"title": "Are You Ready?", "content": ['Get ready to explore your Spotify activity!']},
-        {"title": "Your Top Artists", "content": [artist['name'] for artist in top_artists_data.get('items', [])]},
-        {"title": "Your Top Genres", "content": list(
+        {"title": _("Welcome to Your Spotify Wrap"), "content": [_('Use the buttons below to navigate!')]},
+        {"title": _("Are You Ready?"), "content": [_('Get ready to explore your Spotify activity!')]},
+        {"title": _("Your Top Artists"), "content": [artist['name'] for artist in top_artists_data.get('items', [])]},
+        {"title": _("Your Top Genres"), "content": list(
             set(genre for artist in top_artists_data.get('items', []) for genre in artist.get('genres', [])))},
-        {"title": "Your Top Albums",
+        {"title": _("Your Top Albums"),
          "content": list({track['album']['name'] for track in top_tracks_data.get('items', [])})},
-        {"title": "Your Top Tracks", "content": [
+        {"title": _("Your Top Tracks"), "content": [
             {
                 "name": track['name'],
                 "artist": track['artists'][0]['name'],
                 "spotify_id": track['id'],
             } for track in top_tracks_data.get('items', [])
         ]},
-        {"title": "Your Recently Played Tracks",
+        {"title": _("Your Recently Played Tracks"),
          "content": [f"{item['track']['name']} by {item['track']['artists'][0]['name']}" for item in
                      recent_tracks_data.get('items', [])]},
-        {"title": "Your Playlists",
+        {"title": _("Your Playlists"),
          "content": [f"{playlist['name']} - {playlist['tracks']['total']} tracks" for playlist in
                      playlists_data.get('items', [])]},
-        {"title": "Thank You for Viewing", "content": ['We hope you enjoyed your Spotify wrap!']},
+        {"title": _("Thank You for Viewing"), "content": [_('We hope you enjoyed your Spotify wrap!')]},
     ]
 
-    # Add holiday greeting
+    # Add holiday-specific slides if needed
     if is_holiday_wrap:
-        holiday_greeting = f"Happy {holiday_name or 'Holiday'}!"
-        slides.insert(0, {"title": holiday_greeting, "content": ["Enjoy your festive Spotify wrap!"]})
-        slides.append({"title": "This Holiday Has Been Wrapped!", "content": ["🎄 Spread the joy with festive music! 🎃"]})
+        holiday_greeting = _("Happy %(holiday)s!") % {'holiday': holiday_name or _("Holiday")}
+        slides.insert(0, {"title": holiday_greeting, "content": [_("Enjoy your festive Spotify wrap!")]})
+        slides.append({"title": _("This Holiday Has Been Wrapped!"), "content": [_("🎄 Spread the joy with festive music! 🎃")]})
 
-    # Save the wrap
+    # Save the wrap to the database
     wrap = Wrap.objects.create(
         user=user,
-        title=f"{'Holiday' if is_holiday_wrap else 'Spotify'} Wrap",
+        title=_("Holiday Wrap") if is_holiday_wrap else _("Spotify Wrap"),
         content={"slides": slides},
         wrap_type='holiday' if is_holiday_wrap else 'regular'
     )
-    messages.success(request, f"New {'Holiday' if is_holiday_wrap else ''} Wrap generated successfully!")
-    return redirect('home')
 
+    # Notify the user of success
+    messages.success(request, _("New %(wrap_type)s Wrap generated successfully!") % {'wrap_type': _("Holiday") if is_holiday_wrap else _("Spotify")})
+    return redirect('home')
 
 
 @login_required
@@ -409,3 +415,17 @@ def check_answer(request):
         user_guess = request.POST.get('guess')
         correct = answer == user_guess
         return JsonResponse({'correct': correct})
+
+
+def set_language(request):
+    lang_code = request.GET.get('lang', 'en')
+    activate(lang_code)
+    request.session[LocaleMiddleware.language_cookie_name] = lang_code
+    messages.success(request, _("Language changed successfully!"))
+    return redirect(request.META.get('HTTP_REFERER', 'home'))
+
+def change_language(request, lang_code):
+    """Switch the website language."""
+    activate(lang_code)
+    request.session[settings.LANGUAGE_COOKIE_NAME] = lang_code
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))

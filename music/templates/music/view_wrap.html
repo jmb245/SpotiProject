@@ -1,3 +1,4 @@
+{% load i18n %}
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
@@ -174,7 +175,7 @@
     <div id="slide-container">
         {% for slide in wrap.content.slides %}
             <div class="slide {% if forloop.first %}active{% endif %}">
-                <h2>{{ slide.title }}</h2>
+                <h2>{% trans slide.title %}</h2>
                 {% if slide.title == "Your Top Tracks" %}
                     <ul>
                         {% for track in slide.content %}
@@ -190,7 +191,7 @@
                                         allow="encrypted-media">
                                     </iframe>
                                 {% else %}
-                                    <p>No playback available for this track.</p>
+                                    <p>{% trans "No playback available for this track." %}</p>
                                 {% endif %}
                             </li>
                         {% endfor %}
@@ -198,15 +199,22 @@
                 {% elif slide.content %}
                     <ul>
                         {% for item in slide.content %}
-                            <li>{{ item }}</li>
+                            {% if item|safe and item|add:"" %} {# If the item can be cast as a string #}
+                                <li>{% trans item|stringformat:"s" %}</li>
+                            {% elif item.name and item.artist %} {# Handle dictionary-like items #}
+                                <li>
+                                    <strong>{{ item.name }}</strong> by {{ item.artist }}
+                                </li>
+                            {% else %}
+                                <li>{% trans "Unsupported content format." %}</li>
+                            {% endif %}
                         {% endfor %}
                     </ul>
                 {% else %}
-                    <p>No data available for this slide.</p>
+                    <p>{% trans "No data available for this slide." %}</p>
                 {% endif %}
             </div>
         {% endfor %}
-
     </div>
     <div class="progress-indicator">
         <span id="progress">1</span> / {{ wrap.content.slides|length }}
