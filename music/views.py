@@ -16,6 +16,10 @@ from django.conf import settings
 from .models import Wrap
 from datetime import datetime, date
 from .forms import ContactForm
+from django.middleware.locale import LocaleMiddleware
+from django.utils.translation import activate
+from django.http import HttpResponseRedirect
+from django.utils.translation import gettext as _
 
 logger = logging.getLogger(__name__)
 
@@ -233,20 +237,21 @@ def fetch_spotify_data(url, user, params=None):
 @login_required
 def home(request):
     wraps = Wrap.objects.filter(user=request.user).order_by('-created_at')
-    return render(request, 'music/home.html', {'wraps': wraps})
+    title = _("Welcome to Your Spotify Wraps")
+    return render(request, 'music/home.html', {'wraps': wraps, 'title': title})
 
 @login_required
 def generate_wrap(request):
     user = request.user
     logger.info(f"Generating a new wrap for user: {user.username}")
 
-    # Check if today is a holiday
+    # Define holidays
     holidays = {
-        '10-31': 'Halloween',
-        '12-25': 'Christmas',
+        '10-31': _('Halloween'),
+        '12-25': _('Christmas'),
     }
 
-    # Override date for testing
+    # Determine today's date or use an override
     override_date = request.GET.get('override_date')
     today = datetime.strptime(override_date, '%m-%d').date() if override_date else datetime.now().date()
 
@@ -260,47 +265,48 @@ def generate_wrap(request):
                                             params={"limit": 5})
     playlists_data = fetch_spotify_data("https://api.spotify.com/v1/me/playlists", user, params={"limit": 5})
 
-    # Parse data for slides
+    # Build slides with translatable content
     slides = [
-        {"title": "Welcome to Your Spotify Wrap", "content": ['Use the buttons below to navigate!']},
-        {"title": "Are You Ready?", "content": ['Get ready to explore your Spotify activity!']},
-        {"title": "Your Top Artists", "content": [artist['name'] for artist in top_artists_data.get('items', [])]},
-        {"title": "Your Top Genres", "content": list(
+        {"title": _("Welcome to Your Spotify Wrap"), "content": [_('Use the buttons below to navigate!')]},
+        {"title": _("Are You Ready?"), "content": [_('Get ready to explore your Spotify activity!')]},
+        {"title": _("Your Top Artists"), "content": [artist['name'] for artist in top_artists_data.get('items', [])]},
+        {"title": _("Your Top Genres"), "content": list(
             set(genre for artist in top_artists_data.get('items', []) for genre in artist.get('genres', [])))},
-        {"title": "Your Top Albums",
+        {"title": _("Your Top Albums"),
          "content": list({track['album']['name'] for track in top_tracks_data.get('items', [])})},
-        {"title": "Your Top Tracks", "content": [
+        {"title": _("Your Top Tracks"), "content": [
             {
                 "name": track['name'],
                 "artist": track['artists'][0]['name'],
                 "spotify_id": track['id'],
             } for track in top_tracks_data.get('items', [])
         ]},
-        {"title": "Your Recently Played Tracks",
+        {"title": _("Your Recently Played Tracks"),
          "content": [f"{item['track']['name']} by {item['track']['artists'][0]['name']}" for item in
                      recent_tracks_data.get('items', [])]},
-        {"title": "Your Playlists",
+        {"title": _("Your Playlists"),
          "content": [f"{playlist['name']} - {playlist['tracks']['total']} tracks" for playlist in
                      playlists_data.get('items', [])]},
-        {"title": "Thank You for Viewing", "content": ['We hope you enjoyed your Spotify wrap!']},
+        {"title": _("Thank You for Viewing"), "content": [_('We hope you enjoyed your Spotify wrap!')]},
     ]
 
-    # Add holiday greeting
+    # Add holiday-specific slides if needed
     if is_holiday_wrap:
-        holiday_greeting = f"Happy {holiday_name or 'Holiday'}!"
-        slides.insert(0, {"title": holiday_greeting, "content": ["Enjoy your festive Spotify wrap!"]})
-        slides.append({"title": "This Holiday Has Been Wrapped!", "content": ["🎄 Spread the joy with festive music! 🎃"]})
+        holiday_greeting = _("Happy %(holiday)s!") % {'holiday': holiday_name or _("Holiday")}
+        slides.insert(0, {"title": holiday_greeting, "content": [_("Enjoy your festive Spotify wrap!")]})
+        slides.append({"title": _("This Holiday Has Been Wrapped!"), "content": [_("🎄 Spread the joy with festive music! 🎃")]})
 
-    # Save the wrap
+    # Save the wrap to the database
     wrap = Wrap.objects.create(
         user=user,
-        title=f"{'Holiday' if is_holiday_wrap else 'Spotify'} Wrap",
+        title=_("Holiday Wrap") if is_holiday_wrap else _("Spotify Wrap"),
         content={"slides": slides},
         wrap_type='holiday' if is_holiday_wrap else 'regular'
     )
-    messages.success(request, f"New {'Holiday' if is_holiday_wrap else ''} Wrap generated successfully!")
-    return redirect('home')
 
+    # Notify the user of success
+    messages.success(request, _("New %(wrap_type)s Wrap generated successfully!") % {'wrap_type': _("Holiday") if is_holiday_wrap else _("Spotify")})
+    return redirect('home')
 
 
 @login_required
@@ -340,24 +346,61 @@ def refresh_token(token_info):
     response = requests.post(token_url, data=payload)
     return response.json()
 
-@login_required
 def audio_guess(request):
-    access_token = request.session.get('access_token')
+    user = request.user
 
-    if not access_token:
-        return redirect('spotify_login')
+    # Fetch the token for the user
+    social_account = SocialAccount.objects.filter(user=user, provider='spotify').first()
+    social_token = SocialToken.objects.filter(account=social_account).first() if social_account else None
 
-    # Fetch user's top tracks
-    headers = {"Authorization": f"Bearer {access_token}"}
-    top_tracks_url = "https://api.spotify.com/v1/me/top/tracks?limit=10&time_range=short_term"
-    response = requests.get(top_tracks_url, headers=headers)
+    if not social_token:
+        return JsonResponse({'error': 'Spotify is not linked. Please connect your account.'}, status=401)
+
+        # Use the token to fetch data from Spotify
+    headers = {"Authorization": f"Bearer {social_token.token}"}
+    top_tracks_url = "https://api.spotify.com/v1/me/top/tracks"
+    response = requests.get(top_tracks_url, headers=headers, params={"limit": 10, "time_range": "short_term"})
+
+    if response.status_code == 401:
+        # Handle token expiration and refresh
+        refresh_payload = {
+            'grant_type': 'refresh_token',
+            'refresh_token': social_token.token_secret,
+            'client_id': settings.SPOTIFY_CLIENT_ID,
+            'client_secret': settings.SPOTIFY_CLIENT_SECRET,
+        }
+        refresh_response = requests.post("https://accounts.spotify.com/api/token", data=refresh_payload)
+        if refresh_response.status_code == 200:
+            refresh_data = refresh_response.json()
+            social_token.token = refresh_data.get('access_token')
+            social_token.save()
+
+            # Retry the original request
+            headers["Authorization"] = f"Bearer {social_token.token}"
+            response = requests.get(top_tracks_url, headers=headers, params={"limit": 10, "time_range": "short_term"})
+        else:
+            return JsonResponse({'error': 'Failed to refresh Spotify token.'}, status=401)
+
+    if response.status_code != 200:
+        return JsonResponse({'error': f'Failed to fetch top tracks. Status code: {response.status_code}'},
+                            status=response.status_code)
+
+    # Parse response
     top_tracks = response.json()
+    if 'items' not in top_tracks or not top_tracks['items']:
+        return JsonResponse({'error': 'No top tracks available from Spotify.'}, status=404)
 
-    # Randomly select a song
-    song = random.choice(top_tracks['items'])
-    snippet_url = song.get('preview_url')
-    options = [song['name']] + [random.choice(top_tracks['items'])['name'] for _ in range(3)]
-    random.shuffle(options)
+    # Select a random song and options
+    try:
+        song = random.choice(top_tracks['items'])
+        snippet_url = song.get('preview_url')
+        if not snippet_url:
+            return JsonResponse({'error': 'Selected track does not have a preview URL.'}, status=404)
+
+        options = [song['name']] + [random.choice(top_tracks['items'])['name'] for _ in range(3)]
+        random.shuffle(options)
+    except Exception as e:
+        return JsonResponse({'error': f'An error occurred while preparing the quiz: {str(e)}'}, status=500)
 
     context = {
         'snippet_url': snippet_url,
@@ -372,3 +415,17 @@ def check_answer(request):
         user_guess = request.POST.get('guess')
         correct = answer == user_guess
         return JsonResponse({'correct': correct})
+
+
+def set_language(request):
+    lang_code = request.GET.get('lang', 'en')
+    activate(lang_code)
+    request.session[LocaleMiddleware.language_cookie_name] = lang_code
+    messages.success(request, _("Language changed successfully!"))
+    return redirect(request.META.get('HTTP_REFERER', 'home'))
+
+def change_language(request, lang_code):
+    """Switch the website language."""
+    activate(lang_code)
+    request.session[settings.LANGUAGE_COOKIE_NAME] = lang_code
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))

@@ -3,7 +3,7 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
-
+from django.utils.translation import gettext_lazy as _
 # Load environment variables from .env file
 load_dotenv()
 print("Loaded SPOTIFY_REDIRECT_URI:", os.getenv("SPOTIFY_REDIRECT_URI"))
@@ -15,6 +15,15 @@ DEBUG = True
 ALLOWED_HOSTS = []
 STATIC_URL = '/static/'
 
+LANGUAGES = [
+    ('en', _('English')),
+    ('fr', _('French')),
+    ('es', _('Spanish')),
+]
+
+LOCALE_PATHS = [
+    BASE_DIR / "music/locale",
+]
 # Installed apps
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -33,6 +42,7 @@ INSTALLED_APPS = [
 
 # Middleware
 MIDDLEWARE = [
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',

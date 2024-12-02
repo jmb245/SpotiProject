@@ -1,6 +1,6 @@
 # music/urls.py
 
-from django.urls import path
+from django.urls import path, include
 from . import views
 
 urlpatterns = [
@@ -18,5 +18,8 @@ urlpatterns = [
     path('contact/', views.contact_developer, name='contact_developer'),
     path('audio_guess/', views.audio_guess, name='audio_guess'),
     path('check/', views.check_answer, name='check_answer'),
+    path('set_language/', views.set_language, name='set_language'),
+    path('change-language/<str:lang_code>/', views.change_language, name='change_language'),
+    path('i18n/', include('django.conf.urls.i18n')),
 
 ]
