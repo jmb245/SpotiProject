@@ -1,0 +1,161 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: fr\n"
+
+msgid "Welcome to Your Spotify Wraps"
+msgstr "Bienvenue dans vos Spotify Wraps"
+
+msgid "Your personalized music insights, games, and more."
+msgstr "Vos analyses musicales personnalisées, jeux et plus encore."
+
+msgid "Settings"
+msgstr "Paramètres"
+
+msgid "Log Out"
+msgstr "Déconnexion"
+
+msgid "Contact Developers"
+msgstr "Contacter les développeurs"
+
+msgid "Generate New Wrap"
+msgstr "Générer un nouveau Wrap"
+
+msgid "Your Saved Wraps"
+msgstr "Vos Wraps enregistrés"
+
+msgid "No wraps saved yet. Generate your first wrap!"
+msgstr "Aucun wrap enregistré pour le moment. Générez votre premier wrap !"
+
+msgid "Delete"
+msgstr "Supprimer"
+
+msgid "Interactive Games"
+msgstr "Jeux interactifs"
+
+msgid "Guess Songs by Audio"
+msgstr "Devinez les chansons par audio"
+
+msgid "Sign Up"
+msgstr "S'inscrire"
+
+msgid "Already have an account? Log in here"
+msgstr "Vous avez déjà un compte ? Connectez-vous ici"
+
+msgid "Log In"
+msgstr "Connexion"
+
+msgid "Don’t have an account? Sign up here"
+msgstr "Vous n'avez pas de compte ? Inscrivez-vous ici"
+
+
+msgid "Share on X (Twitter)"
+msgstr "Partager sur X (Twitter)"
+
+msgid "Share on LinkedIn"
+msgstr "Partager sur LinkedIn"
+
+msgid "Copy Wrapped to Clipboard"
+msgstr "Copier le résumé Wrapped dans le presse-papiers"
+
+msgid "Correct!"
+msgstr "Correct !"
+
+msgid "Wrong! Try again."
+msgstr "Faux ! Réessayez."
+
+msgid "Guess the Song"
+msgstr "Devinez la chanson"
+
+msgid "Your Top Artists"
+msgstr "Vos meilleurs artistes"
+
+msgid "Your Top Tracks"
+msgstr "Vos meilleures chansons"
+
+msgid "Your Top Genres"
+msgstr "Vos meilleurs genres"
+
+msgid "Your Top Albums"
+msgstr "Vos meilleurs albums"
+
+msgid "Your Recently Played Tracks"
+msgstr "Vos pistes récemment écoutées"
+
+msgid "Your Playlists"
+msgstr "Vos playlists"
+
+msgid "Thank You for Viewing"
+msgstr "Merci pour votre visite"
+
+msgid "Language changed successfully!"
+msgstr "Langue changée avec succès !"
+
+msgid "Welcome to Your Spotify Wrap"
+msgstr "Bienvenue dans Votre Spotify Wrap"
+
+msgid "Use the buttons below to navigate!"
+msgstr "Utilisez les boutons ci-dessous pour naviguer!"
+
+msgid "Previous"
+msgstr "Précédent"
+
+msgid "Next"
+msgstr "Suivant"
+
+msgid "Back to Home"
+msgstr "Retour à l'Accueil"
+
+
+msgid "Get ready to explore your Spotify activity!"
+msgstr "Préparez-vous à explorer votre activité Spotify!"
+
+msgid "No data available for this slide."
+msgstr "Aucune donnée disponible pour cette page."
+
+msgid "Are You Ready?"
+msgstr "Êtes-vous prêts?"
+
+msgid "Contact the Developers"
+msgstr "Contactez les Développeurs"
+
+msgid "Toggle Theme"
+msgstr "Changer de Thème"
+
+msgid "If you have any questions or feedback, feel free to send a message."
+msgstr "Si vous avez des questions ou des commentaires, n'hésitez pas à envoyer un message."
+
+msgid "Send Message"
+msgstr "Envoyer le Message"
+
+msgid "Happy Christmas!"
+msgstr "Joyeux Noël!"
+
+msgid "Enjoy your festive Spotify wrap!"
+msgstr "Profitez de votre Spotify Wrap festif!"
+
+msgid "Happy Halloween!"
+msgstr "Joyeux Halloween!"
+
+msgid "This Holiday Has Been Wrapped!"
+msgstr "Ces vacances ont été emballées!"
+
+msgid "🎄 Spread the joy with festive music! 🎃"
+msgstr "🎄 Partagez la joie avec de la musique festive ! 🎃"
+
+msgid "We hope you enjoyed your Spotify wrap!"
+msgstr "Nous espérons que vous avez apprécié votre Spotify Wrap !"
+
+msgid "Name"
+msgstr "Nom"
+
+msgid "Email"
+msgstr "E-mail"
+
+msgid "Subject"
+msgstr "Sujet"
+
+msgid "Message"
+msgstr "Message"
+
+
