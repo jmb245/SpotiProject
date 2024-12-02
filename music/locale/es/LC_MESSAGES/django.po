@@ -18,8 +18,6 @@ msgstr "Cerrar sesión"
 msgid "Contact Developers"
 msgstr "Contactar a los desarrolladores"
 
-msgid "Generate New Wrap"
-msgstr "Generar un nuevo Wrap"
 
 msgid "Your Saved Wraps"
 msgstr "Tus Wraps guardados"
@@ -125,4 +123,7 @@ msgstr "¡Prepárate para explorar tu actividad de Spotify!"
 
 msgid "No data available for this slide."
 msgstr "No hay datos disponibles para esta página."
+
+msgid "Generate New Wrap"
+msgstr "Generar un nuevo Wrap"
 

@@ -117,11 +117,12 @@ msgstr "Suivant"
 msgid "Back to Home"
 msgstr "Retour à l'Accueil"
 
-msgid "Are You Ready?"
-msgstr "Êtes-vous prêts?"
 
 msgid "Get ready to explore your Spotify activity!"
 msgstr "Préparez-vous à explorer votre activité Spotify!"
 
 msgid "No data available for this slide."
 msgstr "Aucune donnée disponible pour cette page."
+
+msgid "Are You Ready?"
+msgstr "Êtes-vous prêts?"
