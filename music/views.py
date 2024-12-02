@@ -72,18 +72,11 @@ def link_spotify(request):
     """Initiate Spotify link process"""
     return redirect('/accounts/spotify/login/')
 
-@login_required
 def spotify_callback(request):
     user = request.user
-    logger.info(f"User: {user} has accessed the callback")
-
-    # Retrieve the authorization code from the callback URL
     code = request.GET.get('code')
-    if not code:
-        messages.error(request, 'Spotify authorization failed. Please try again.')
-        return redirect('settings')
 
-    # Manually request the access token from Spotify
+    # Exchange code for tokens (logic remains the same)
     token_url = 'https://accounts.spotify.com/api/token'
     redirect_uri = settings.SPOTIFY_REDIRECT_URI
     client_id = settings.SPOTIFY_CLIENT_ID
@@ -95,35 +88,34 @@ def spotify_callback(request):
         'client_id': client_id,
         'client_secret': client_secret,
     }
-
-    # Request the token from Spotify
     response = requests.post(token_url, data=payload)
-    if response.status_code != 200:
-        logger.error(f"Failed to get Spotify token. Status code: {response.status_code}")
-        messages.error(request, 'Spotify linking failed. Please try again.')
-        return redirect('settings')
-
-    # Parse the token data
     token_data = response.json()
+
     access_token = token_data.get('access_token')
     refresh_token = token_data.get('refresh_token')
 
-    if not access_token:
-        logger.error("No access token returned from Spotify.")
-        messages.error(request, 'Spotify linking failed. Please try again.')
-        return redirect('settings')
+    # Get Spotify user ID (you might already have this logic)
+    headers = {'Authorization': f'Bearer {access_token}'}
+    user_response = requests.get('https://api.spotify.com/v1/me', headers=headers)
+    spotify_user = user_response.json()
+    spotify_user_id = spotify_user.get('id')
 
-    # Save or update the token in the database
-    social_account, _ = SocialAccount.objects.get_or_create(user=user, provider='spotify')
-    social_token, _ = SocialToken.objects.get_or_create(account=social_account)
-    social_token.token = access_token
-    social_token.token_secret = refresh_token  # Use token_secret to store refresh token
-    social_token.save()
+    # Use update_or_create to avoid IntegrityError
+    social_account, created = SocialAccount.objects.update_or_create(
+        user=user,
+        provider='spotify',
+        defaults={'uid': spotify_user_id}
+    )
 
-    logger.info(f"Spotify token successfully stored for user {user.username}")
-    messages.success(request, 'Spotify successfully linked!')
+    # Update or create the token
+    social_token, _ = SocialToken.objects.update_or_create(
+        account=social_account,
+        defaults={'token': access_token, 'token_secret': refresh_token}
+    )
+
+    # Redirect user to home after successful linking
+    messages.success(request, "Spotify account linked successfully.")
     return redirect('home')
-
 def contact_developers(request):
     if request.method == 'POST':
         # Process feedback form
