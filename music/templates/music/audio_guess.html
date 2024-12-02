@@ -152,7 +152,7 @@
     <script>
         function setTheme(theme) {
             const themeStylesheet = document.getElementById('theme-stylesheet');
-            themeStylesheet.setAttribute('href', 
+            themeStylesheet.setAttribute('href',
                 theme === 'dark' ? '{% static "music/dark.css" %}' :
                 theme === 'light' ? '{% static "music/light.css" %}' :
                 theme === 'colorful' ? '{% static "music/color.css" %}' :
@@ -212,7 +212,7 @@
         function submitGuess() {
             const form = document.getElementById('guess-form');
             const formData = new FormData(form);
-        
+
             fetch("{% url 'check_answer' %}", {
                 method: 'POST',
                 body: formData,
