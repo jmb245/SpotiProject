@@ -340,24 +340,61 @@ def refresh_token(token_info):
     response = requests.post(token_url, data=payload)
     return response.json()
 
-@login_required
 def audio_guess(request):
-    access_token = request.session.get('access_token')
+    user = request.user
 
-    if not access_token:
-        return redirect('spotify_login')
+    # Fetch the token for the user
+    social_account = SocialAccount.objects.filter(user=user, provider='spotify').first()
+    social_token = SocialToken.objects.filter(account=social_account).first() if social_account else None
 
-    # Fetch user's top tracks
-    headers = {"Authorization": f"Bearer {access_token}"}
-    top_tracks_url = "https://api.spotify.com/v1/me/top/tracks?limit=10&time_range=short_term"
-    response = requests.get(top_tracks_url, headers=headers)
+    if not social_token:
+        return JsonResponse({'error': 'Spotify is not linked. Please connect your account.'}, status=401)
+
+        # Use the token to fetch data from Spotify
+    headers = {"Authorization": f"Bearer {social_token.token}"}
+    top_tracks_url = "https://api.spotify.com/v1/me/top/tracks"
+    response = requests.get(top_tracks_url, headers=headers, params={"limit": 10, "time_range": "short_term"})
+
+    if response.status_code == 401:
+        # Handle token expiration and refresh
+        refresh_payload = {
+            'grant_type': 'refresh_token',
+            'refresh_token': social_token.token_secret,
+            'client_id': settings.SPOTIFY_CLIENT_ID,
+            'client_secret': settings.SPOTIFY_CLIENT_SECRET,
+        }
+        refresh_response = requests.post("https://accounts.spotify.com/api/token", data=refresh_payload)
+        if refresh_response.status_code == 200:
+            refresh_data = refresh_response.json()
+            social_token.token = refresh_data.get('access_token')
+            social_token.save()
+
+            # Retry the original request
+            headers["Authorization"] = f"Bearer {social_token.token}"
+            response = requests.get(top_tracks_url, headers=headers, params={"limit": 10, "time_range": "short_term"})
+        else:
+            return JsonResponse({'error': 'Failed to refresh Spotify token.'}, status=401)
+
+    if response.status_code != 200:
+        return JsonResponse({'error': f'Failed to fetch top tracks. Status code: {response.status_code}'},
+                            status=response.status_code)
+
+    # Parse response
     top_tracks = response.json()
+    if 'items' not in top_tracks or not top_tracks['items']:
+        return JsonResponse({'error': 'No top tracks available from Spotify.'}, status=404)
 
-    # Randomly select a song
-    song = random.choice(top_tracks['items'])
-    snippet_url = song.get('preview_url')
-    options = [song['name']] + [random.choice(top_tracks['items'])['name'] for _ in range(3)]
-    random.shuffle(options)
+    # Select a random song and options
+    try:
+        song = random.choice(top_tracks['items'])
+        snippet_url = song.get('preview_url')
+        if not snippet_url:
+            return JsonResponse({'error': 'Selected track does not have a preview URL.'}, status=404)
+
+        options = [song['name']] + [random.choice(top_tracks['items'])['name'] for _ in range(3)]
+        random.shuffle(options)
+    except Exception as e:
+        return JsonResponse({'error': f'An error occurred while preparing the quiz: {str(e)}'}, status=500)
 
     context = {
         'snippet_url': snippet_url,
