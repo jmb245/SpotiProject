@@ -1,0 +1,128 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: es\n"
+
+msgid "Welcome to Your Spotify Wraps"
+msgstr "Bienvenido a tus Spotify Wraps"
+
+msgid "Your personalized music insights, games, and more."
+msgstr "Tus análisis de música personalizados, juegos y más."
+
+msgid "Settings"
+msgstr "Configuración"
+
+msgid "Log Out"
+msgstr "Cerrar sesión"
+
+msgid "Contact Developers"
+msgstr "Contactar a los desarrolladores"
+
+msgid "Generate New Wrap"
+msgstr "Generar un nuevo Wrap"
+
+msgid "Your Saved Wraps"
+msgstr "Tus Wraps guardados"
+
+msgid "No wraps saved yet. Generate your first wrap!"
+msgstr "No tienes ningún Wrap guardado aún. ¡Genera tu primer Wrap!"
+
+msgid "Delete"
+msgstr "Eliminar"
+
+msgid "Interactive Games"
+msgstr "Juegos interactivos"
+
+msgid "Guess Songs by Audio"
+msgstr "Adivina las canciones por audio"
+
+msgid "Sign Up"
+msgstr "Regístrate"
+
+msgid "Already have an account? Log in here"
+msgstr "¿Ya tienes una cuenta? Inicia sesión aquí"
+
+msgid "Log In"
+msgstr "Iniciar sesión"
+
+msgid "Don’t have an account? Sign up here"
+msgstr "¿No tienes una cuenta? Regístrate aquí"
+
+msgid "Send Message"
+msgstr "Enviar mensaje"
+
+msgid "Contact the Developers"
+msgstr "Contacta a los desarrolladores"
+
+msgid "If you have any questions or feedback, feel free to send a message."
+msgstr "Si tienes preguntas o comentarios, no dudes en enviar un mensaje."
+
+msgid "Toggle Theme"
+msgstr "Cambiar tema"
+
+msgid "Share on X (Twitter)"
+msgstr "Compartir en X (Twitter)"
+
+msgid "Share on LinkedIn"
+msgstr "Compartir en LinkedIn"
+
+msgid "Copy Wrapped to Clipboard"
+msgstr "Copiar resumen Wrapped al portapapeles"
+
+msgid "Correct!"
+msgstr "¡Correcto!"
+
+msgid "Wrong! Try again."
+msgstr "¡Incorrecto! Inténtalo de nuevo."
+
+msgid "Guess the Song"
+msgstr "Adivina la canción"
+
+msgid "Your Top Artists"
+msgstr "Tus mejores artistas"
+
+msgid "Your Top Tracks"
+msgstr "Tus mejores canciones"
+
+msgid "Your Top Genres"
+msgstr "Tus mejores géneros"
+
+msgid "Your Top Albums"
+msgstr "Tus mejores álbumes"
+
+msgid "Your Recently Played Tracks"
+msgstr "Tus pistas reproducidas recientemente"
+
+msgid "Your Playlists"
+msgstr "Tus playlists"
+
+msgid "Thank You for Viewing"
+msgstr "Gracias por ver"
+
+msgid "Language changed successfully!"
+msgstr "¡Idioma cambiado con éxito!"
+
+msgid "Welcome to Your Spotify Wrap"
+msgstr "Bienvenido a Tu Spotify Wrap"
+
+msgid "Use the buttons below to navigate!"
+msgstr "¡Usa los botones de abajo para navegar!"
+
+msgid "Previous"
+msgstr "Anterior"
+
+msgid "Next"
+msgstr "Siguiente"
+
+msgid "Back to Home"
+msgstr "Volver al Inicio"
+
+msgid "Are You Ready?"
+msgstr "¿Estás listo?"
+
+msgid "Get ready to explore your Spotify activity!"
+msgstr "¡Prepárate para explorar tu actividad de Spotify!"
+
+msgid "No data available for this slide."
+msgstr "No hay datos disponibles para esta página."
+
