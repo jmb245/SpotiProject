@@ -157,10 +157,10 @@
             if (toggleButton) {
                 const currentTheme = localStorage.getItem('theme') || 'light';
                 setTheme(currentTheme);
-                
+
                 toggleButton.textContent = currentTheme === 'light' ? 'Switch to Dark Mode' :
                                            currentTheme === 'dark' ? 'Switch to Colorful' :
-                                           currentTheme === 'colorful' ? 'Switch to Orange' : 
+                                           currentTheme === 'colorful' ? 'Switch to Orange' :
                                            'Switch to Light Mode';
 
                 toggleButton.onclick = () => {
@@ -173,7 +173,7 @@
 
                     toggleButton.textContent = newTheme === 'light' ? 'Switch to Dark Mode' :
                                                newTheme === 'dark' ? 'Switch to Colorful' :
-                                               newTheme === 'colorful' ? 'Switch to Orange' : 
+                                               newTheme === 'colorful' ? 'Switch to Orange' :
                                                'Switch to Light Mode';
                 };
             }
